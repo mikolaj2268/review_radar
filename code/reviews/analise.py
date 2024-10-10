@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Load the scraped data
-reviews_df = pd.read_csv('combined_app_reviews.csv')
+reviews_df = pd.read_csv('code/reviews/combined_app_reviews.csv')
 
 # Display the first few rows to ensure the data is loaded properly
 print("Data loaded successfully. Here's a sample of the reviews:")
