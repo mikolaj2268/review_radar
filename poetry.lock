@@ -389,6 +389,17 @@ files = [
 ]
 
 [[package]]
+name = "google-play-scraper"
+version = "1.2.7"
+description = "Google-Play-Scraper provides APIs to easily crawl the Google Play Store for Python without any external dependencies!"
+optional = false
+python-versions = "<4.0,>=3.7"
+files = [
+    {file = "google_play_scraper-1.2.7-py3-none-any.whl", hash = "sha256:a485510b09265f0096fc3813cfc26eef27e9a5c0035f99ee23f80e00de724530"},
+    {file = "google_play_scraper-1.2.7.tar.gz", hash = "sha256:284f321d1b2c39e39e97e490d51bc316e1d876802360efb7e7463b5c16ed4972"},
+]
+
+[[package]]
 name = "html5lib"
 version = "1.1"
 description = "HTML parser based on the WHATWG HTML specification"
@@ -1403,4 +1414,4 @@ repair = ["scipy (>=1.6.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "52c53fd280a64182ae4bd657e56033694da0ec59bd2b81981cc8648503eca69c"
+content-hash = "5c713cd5531c55161c3931661a8fb676e484bdeced5ebedcc6002ad116fa326f"

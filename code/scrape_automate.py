@@ -12,7 +12,7 @@ import json
 from time import sleep
 from typing import List, Optional, Tuple
 
-MAX_COUNT_EACH_FETCH = 199
+MAX_COUNT_EACH_FETCH = 999
 
 class _ContinuationToken:
     __slots__ = (
