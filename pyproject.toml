@@ -17,6 +17,7 @@ google-play-scraper = "^1.2.7"
 streamlit = "^1.39.0"
 watchdog = "^5.0.3"
 psycopg2 = "^2.9.10"
+python-dotenv = "^1.0.1"
 
 
 [build-system]

@@ -2,15 +2,27 @@
 
 import psycopg2
 import pandas as pd
-from google_play_scraper import search
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 def get_db_connection():
-    """Establishes a connection to the PostgreSQL database."""
+    """Establishes a connection to the PostgreSQL database on Google Cloud SQL via public IP."""
+    # Get database connection information from environment variables
+    db_host = os.getenv('DB_HOST', '34.118.124.124')  # Your Cloud SQL instance's public IP
+    db_port = os.getenv('DB_PORT', '5432')
+    db_name = os.getenv('DB_NAME', 'google_play_reviews')
+    db_user = os.getenv('DB_USER', 'postgres')
+    db_password = os.getenv('DB_PASSWORD', 'Mikopostgres2024!')
+
     conn = psycopg2.connect(
-        host="localhost",
-        database="google_play_reviews",
-        user="postgres",
-        password="password"
+        host=db_host,
+        port=db_port,
+        database=db_name,
+        user=db_user,
+        password=db_password
     )
     return conn
 
