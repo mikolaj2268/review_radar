@@ -1,5 +1,5 @@
 # db_utils.py
-
+from google_play_scraper import search
 import psycopg2
 import pandas as pd
 import os

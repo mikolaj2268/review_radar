@@ -21,7 +21,12 @@ apps = {
     'Amazon': 'com.amazon.mShop.android.shopping',
     'Snapchat': 'com.snapchat.android',
     'ChatGPT': 'com.openai.chatgpt',
-    'Facebook': 'com.facebook.katana'
+    'Facebook': 'com.facebook.katana',
+    'Whatsapp': 'com.whatsapp',
+    'Instagram': 'com.instagram.android',
+    'TikTok': 'com.zhiliaoapp.musically',
+    'Google Chrome': 'com.android.chrome',
+    'YouTube': 'com.google.android.youtube'
 }
 
 class _ContinuationToken:
