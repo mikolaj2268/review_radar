@@ -35,13 +35,32 @@ plt.xlabel("Długość treści")
 plt.ylabel("Liczba")
 plt.show()
 
-# Rozkład ocen w kolumnie 'score'
+score_distribution = data['score'].value_counts(normalize=True) * 100
 print("\nRozkład ocen w kolumnie 'score':")
-print(data['score'].value_counts(normalize=True) * 100)
-sns.histplot(data['score'], bins=5, kde=False)
+print(score_distribution)
+
+score_distribution = pd.Series({
+    5: 60.059915,
+    1: 21.441825,
+    4: 7.758021,
+    3: 5.655199,
+    2: 5.085041
+})
+
+# Utworzenie wykresu słupkowego z procentami nad słupkami
+plt.figure(figsize=(8, 6))
+bars = plt.bar(score_distribution.index, score_distribution.values, width=0.6)
+
+# Dodanie wartości procentowych nad słupkami
+for bar in bars:
+    plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), f"{bar.get_height():.1f}%",
+             ha='center', va='bottom', fontsize=10)
+
+# Dodanie tytułów i etykiet
 plt.title("Rozkład ocen")
 plt.xlabel("Ocena")
-plt.ylabel("Liczba")
+plt.ylabel("Procent")
+plt.xticks(list(score_distribution.index))  # Ustawienie etykiet na osiach x
 plt.show()
 
 
