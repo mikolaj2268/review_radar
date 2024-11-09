@@ -20,7 +20,7 @@
 import streamlit as st
 from PIL import Image
 
-from functions.gui import create_st_button, get_file_path
+from src.functions.gui import create_st_button, get_file_path
 
 
 def home_page():
@@ -28,7 +28,7 @@ def home_page():
     left_col, right_col = st.columns(2)
 
     # Add logo or main image
-    img = Image.open(get_file_path("review_radar_logo.png", dir_path="./data"))
+    img = Image.open(get_file_path("logo.png", dir_path="assets/logo"))
     right_col.image(img, output_format="PNG")
 
     left_col.markdown("# ReviewRadar")
