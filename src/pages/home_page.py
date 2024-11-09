@@ -22,6 +22,7 @@ from PIL import Image
 
 from src.functions.gui import create_st_button, get_file_path
 
+st.set_page_config(layout="wide")
 
 def home_page():
     # Sidebar links
