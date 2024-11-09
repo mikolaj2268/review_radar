@@ -1,14 +1,14 @@
 # main_app.py
 
 import streamlit as st
-from db_utils import (
+from src.database_connection.db_utils import (
     get_db_connection,
     get_app_names,
     get_reviews_for_app,
     create_reviews_table,
     get_app_id
 )
-from scraper import select_app, scrape_and_store_reviews
+from src.functions.scraper import select_app, scrape_and_store_reviews
 from datetime import datetime
 
 def main():
@@ -203,6 +203,7 @@ def main():
                             country="us",
                             language="en",
                         )
+
                         # Store results
                         app_results.append({
                             'app_name': app_name,
