@@ -1,2 +1,4 @@
 venv
 reviews/.idea/
+*.pyc
+__pycache__/
