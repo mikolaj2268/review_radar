@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
   ReviewRadar Application
-  Created by Mikołaj Mroz
+  Created by Mikołaj Mroz and Michał Binda
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -24,34 +24,52 @@ from src.functions.gui import create_st_button, get_file_path
 
 
 def home_page():
-
-    left_col, right_col = st.columns(2)
-
-    # Add logo or main image
-    img = Image.open(get_file_path("logo.png", dir_path="assets/logo"))
-    right_col.image(img, output_format="PNG")
-
-    left_col.markdown("# ReviewRadar")
-    left_col.markdown("### Explore and analyze app reviews with ease")
-    left_col.markdown("**Created by Mikołaj Mroz**")
-    left_col.markdown("Analyze user sentiment and app performance trends to make data-driven decisions.")
-
     # Sidebar links
+    st.sidebar.title("Navigation")
+    st.sidebar.markdown("## Useful Links")
     database_link_dict = {
         "GitHub Repository": "https://github.com/mikolaj2268/review_radar",
         "Google Play API": "https://developers.google.com/android-publisher",
     }
-
-    st.sidebar.markdown("## Useful Links")
     for link_text, link_url in database_link_dict.items():
         create_st_button(link_text, link_url, st_col=st.sidebar)
 
-    st.markdown("---")
+
+
+    st.sidebar.markdown("## Software-Related Links")
+    software_link_dict = {
+        "Pandas": "https://pandas.pydata.org",
+        "NumPy": "https://numpy.org",
+        "Streamlit": "https://streamlit.io",
+    }
+    for link_text, link_url in software_link_dict.items():
+        create_st_button(link_text, link_url, st_col=st.sidebar)
 
     # Main content
+    left_col, right_col = st.columns([3, 7])  # 30% dla obrazu, 70% dla tekstu
+
+    with left_col:
+        # Add logo or main image
+        img = Image.open("assets/logo/logo.png")  # Zamień na swoją ścieżkę
+        st.image(img, width=250)
+
+    with right_col:
+        st.markdown(
+            """
+            # ReviewRadar
+            ### Explore and analyze app reviews with ease
+            **Created by Mikołaj Mróz and Michał Binda**
+            
+            Analyze user sentiment and app performance trends to make data-driven decisions.
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("---")
+
     st.markdown(
         """
-        ### About ReviewRadar
+        ## About ReviewRadar
         ReviewRadar is a comprehensive tool designed to help developers and users analyze reviews of mobile applications available on Google Play. By leveraging sentiment analysis and trend detection, ReviewRadar enables you to:
         
         - **Analyze trends** in user feedback over time.
@@ -60,15 +78,15 @@ def home_page():
         - **Explore common themes** using keyword extraction.
 
         ReviewRadar integrates modern tools and APIs to ensure accurate and actionable insights for app developers and users alike.
-        """
+        """,
+        unsafe_allow_html=True,
     )
 
-    # Features
-    left_col, right_col = st.columns(2)
+    st.markdown("---")
 
-    left_col.markdown(
+    st.markdown(
         """
-        ### Features
+        ## Features
         - **Data Collection**: Automatically scrape reviews and ratings from Google Play.
         - **Sentiment Analysis**: Detect user sentiment using NLP techniques.
         - **Customizable Visualizations**: Generate insightful charts and graphs.
@@ -76,42 +94,30 @@ def home_page():
         """
     )
 
-    right_col.markdown(
+    st.markdown("---")
+
+    st.markdown(
         """
-        ### Usage
-        - **Home Page:** Welcome and overview of the application.
-        - **Explore Reviews:** Analyze reviews and ratings for a selected app.
-        - **Trends Analysis:** View trends in sentiment over time or after updates.
-        - **Keyword Insights:** Identify frequently mentioned terms in user comments.
-        - **Database Queries:** Query the database for specific insights or data export.
+        ## Authors
+        **Mikołaj Mróz**
+        - GitHub: [mikolaj2268](https://github.com/mikolaj2268)
+        - Email: <mikolaj2268@gmail.com>\n
+        **Michał Binda**
+        - GitHub: [michal1701](https://github.com/michal1701)
+        - Email: <mich.binda@gmail.com>
         """
     )
 
     st.markdown("---")
 
-    # Contact and credits
-    left_info_col, right_info_col = st.columns(2)
-
-    left_info_col.markdown(
+    st.markdown(
         """
-        ### Author
-        - **Mikołaj Mroz**
-        - GitHub: [mikolaj2268](https://github.com/mikolaj2268)
-        - Email: <mikolaj.mroz@example.com>
-        """
-    )
-
-    right_info_col.markdown(
-        """
-        ### License
-        - Apache License 2.0
-        """
-    )
-
-    right_info_col.markdown(
-        """
-        ### Acknowledgments
+        ## Acknowledgments
         - Google Play API
         - Open Source Libraries: Pandas, NumPy, Streamlit, Matplotlib
         """
     )
+
+
+if __name__ == "__main__":
+    home_page()
