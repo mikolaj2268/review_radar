@@ -13,7 +13,7 @@ PAGES = {
 def main():
     st.sidebar.title("Options")
     selection = st.sidebar.selectbox(
-        "Select a page", ["Home", "Add Application"]
+        "Select a page", ["Home", "App Analysis"]
     )  # Wybór strony
     if selection in PAGES:
         page = PAGES[selection]  # Pobierz funkcję odpowiedzialną za daną stronę
