@@ -46,14 +46,14 @@ def home_page():
         create_st_button(link_text, link_url, st_col=st.sidebar)
 
     # Main content
-    left_col, right_col = st.columns([3, 7])  # 30% dla obrazu, 70% dla tekstu
+    left_col, right_col = st.columns(2)  # 30% dla obrazu, 70% dla tekstu
 
-    with left_col:
+    with right_col:
         # Add logo or main image
         img = Image.open("assets/logo/logo.png")  # Zamień na swoją ścieżkę
         st.image(img, width=250)
 
-    with right_col:
+    with left_col:
         st.markdown(
             """
             # ReviewRadar
