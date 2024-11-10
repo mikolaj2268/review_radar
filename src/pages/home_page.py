@@ -22,6 +22,7 @@ from PIL import Image
 
 from src.functions.gui import create_st_button, get_file_path
 
+st.set_page_config(layout="wide")
 
 def home_page():
     # Sidebar links
@@ -84,6 +85,19 @@ def home_page():
 
     st.markdown("---")
 
+    # Section: Usage
+    st.markdown(
+        """
+        ## Usage: 4 Easy Steps to Improve Your App
+        1. **Go to App Analysis**: Navigate to the section and start your journey.
+        2. **Search Your App**: Enter the name of the app and specify the date range.
+        3. **Analyze the Reviews**: Dive into user feedback to understand their needs.
+        4. **Improve Your App**: Use these insights to enhance your app and delight your customers!
+        """
+    )
+
+    st.markdown("---")
+    
     st.markdown(
         """
         ## Features
