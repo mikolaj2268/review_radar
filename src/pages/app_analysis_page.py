@@ -59,18 +59,36 @@ def app_analysis_page():
     start_date = datetime.combine(start_date_input, datetime.min.time())
     end_date = datetime.combine(end_date_input, datetime.max.time())
 
-    # "Perform Analysis" button in the sidebar
-    perform_analysis_button = st.sidebar.button("Perform Analysis")
+    # "Download Reviews and Perform Analysis" button in the sidebar
+    perform_analysis_button = st.sidebar.button("Download reviews and perform analysis")
 
+    # "Stop Downloading and Perform Analysis" button in the sidebar
+    stop_download_button = st.sidebar.button("Stop downloading and perform analysis")
+
+    # Initialize session state variables
     if 'analysis_result' not in st.session_state:
         st.session_state.analysis_result = None
+    if 'stop_download' not in st.session_state:
+        st.session_state.stop_download = False
 
-    if selected_app and selected_app_id and perform_analysis_button:
-        # Check existing reviews and fetch missing ones
-        check_and_fetch_reviews(conn, selected_app, selected_app_id, start_date, end_date)
-        # Display reviews
-        st.session_state.analysis_result = display_reviews(conn, selected_app, start_date, end_date)
-    elif perform_analysis_button:
+    if selected_app and selected_app_id:
+        if perform_analysis_button:
+            # Reset stop_download flag
+            st.session_state.stop_download = False
+
+            # Check existing reviews and fetch missing ones
+            check_and_fetch_reviews(conn, selected_app, selected_app_id, start_date, end_date)
+
+            # Display reviews
+            st.session_state.analysis_result = display_reviews(conn, selected_app, start_date, end_date)
+        elif stop_download_button:
+            # Set stop_download flag to True to interrupt the downloading process
+            st.session_state.stop_download = True
+            st.info("Stopping download and performing analysis with existing data...")
+
+            # Display reviews with existing data
+            st.session_state.analysis_result = display_reviews(conn, selected_app, start_date, end_date)
+    elif perform_analysis_button or stop_download_button:
         st.warning("Please select an application before proceeding.")
 
     # Display analysis result if available and not empty

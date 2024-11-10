@@ -29,12 +29,7 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
     if not end_date:
         end_date = datetime.now()
 
-    # Keep the original start date and end date for reporting
-    original_start_date = start_date
-    original_end_date = end_date
-
     total_reviews_fetched = 0
-    all_reviews = []
     continuation_token = None
 
     # Calculate total seconds in the date range
@@ -45,6 +40,10 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
     oldest_review_date_fetched = end_date  # Initialize with end_date
 
     while True:
+        if st.session_state.get('stop_download'):
+            st.warning("Download stopped by user.")
+            break
+
         try:
             new_reviews, continuation_token = reviews(
                 app_id,
@@ -73,8 +72,7 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
                 # Continue to next batch
                 continue
 
-        # Add all reviews in range to the list (we will handle duplicates in the database)
-        all_reviews.extend(new_reviews_in_range)
+        # Add all reviews in range to the list
         total_reviews_fetched += len(new_reviews_in_range)
 
         # Update oldest_review_date_fetched
@@ -95,6 +93,43 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
             progress_bar.progress(progress)
             progress_text.write(f"**{app_name}: Fetched {total_reviews_fetched} reviews so far...** Progress: {progress*100:.2f}%")
 
+        # Insert data into PostgreSQL
+        reviews_df = pd.DataFrame(new_reviews_in_range)
+        reviews_df['app_name'] = app_name
+        reviews_df['country'] = country
+        reviews_df['language'] = language
+
+        # Replace NaT and NaN values with None
+        reviews_df = reviews_df.replace({pd.NaT: None})
+        reviews_df = reviews_df.where(pd.notnull(reviews_df), None)
+
+        # Insert reviews into the database, handle duplicates with ON CONFLICT DO NOTHING
+        for _, row in reviews_df.iterrows():
+            cursor.execute('''
+                INSERT INTO app_reviews (
+                    review_id, user_name, user_image, content, score, thumbs_up_count,
+                    review_created_version, at, reply_content, replied_at, app_version,
+                    app_name, country, language
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (review_id) DO NOTHING;
+            ''', (
+                row['reviewId'],
+                row['userName'],
+                row['userImage'],
+                row['content'],
+                row['score'],
+                row['thumbsUpCount'],
+                row.get('reviewCreatedVersion', None),
+                row['at'],
+                row.get('replyContent', None),
+                row.get('repliedAt', None),
+                row.get('appVersion', None),
+                app_name,
+                country,
+                language
+            ))
+        conn.commit()
+
         # Check if the oldest review fetched is older than the start_date
         if oldest_review_date_fetched <= start_date:
             break
@@ -102,52 +137,12 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
         if continuation_token is None:
             break
 
-    if not all_reviews:
-        if progress_bar is not None and progress_text is not None:
-            progress_bar.progress(1.0)
-            progress_text.write(f"**No reviews found for {app_name} in this date range.**")
-        cursor.close()
-        return
-
-    # Insert data into PostgreSQL
-    reviews_df = pd.DataFrame(all_reviews)
-    reviews_df['app_name'] = app_name
-    reviews_df['country'] = country
-    reviews_df['language'] = language
-
-    # Replace NaT and NaN values with None
-    reviews_df = reviews_df.replace({pd.NaT: None})
-    reviews_df = reviews_df.where(pd.notnull(reviews_df), None)
-
-    # Insert reviews into the database, handle duplicates with ON CONFLICT DO NOTHING
-    for _, row in reviews_df.iterrows():
-        cursor.execute('''
-            INSERT INTO app_reviews (
-                review_id, user_name, user_image, content, score, thumbs_up_count,
-                review_created_version, at, reply_content, replied_at, app_version,
-                app_name, country, language
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ON CONFLICT (review_id) DO NOTHING;
-        ''', (
-            row['reviewId'],
-            row['userName'],
-            row['userImage'],
-            row['content'],
-            row['score'],
-            row['thumbsUpCount'],
-            row.get('reviewCreatedVersion', None),
-            row['at'],
-            row.get('replyContent', None),
-            row.get('repliedAt', None),
-            row.get('appVersion', None),
-            app_name,
-            country,
-            language
-        ))
-    conn.commit()
     cursor.close()
 
     # Final progress message
     if progress_bar is not None and progress_text is not None:
         progress_bar.progress(1.0)
-        progress_text.write(f"**Finished downloading reviews for {app_name}. Total reviews fetched: {total_reviews_fetched}.**")
+        if st.session_state.get('stop_download'):
+            progress_text.write(f"**Download stopped. Total reviews fetched: {total_reviews_fetched}.**")
+        else:
+            progress_text.write(f"**Finished downloading reviews for {app_name}. Total reviews fetched: {total_reviews_fetched}.**")

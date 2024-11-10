@@ -6,10 +6,11 @@ from src.database_connection.db_utils import (
     get_reviews_date_ranges,
     get_reviews_for_app
 )
-from src.functions.scraper import select_app, scrape_and_store_reviews  
+from src.functions.scraper import scrape_and_store_reviews  
 
 def search_and_select_app(search_query):
     # Search for apps via select_app function
+    from src.functions.scraper import select_app
     search_results = select_app(search_query)
     return search_results
 
@@ -31,7 +32,8 @@ def check_and_fetch_reviews(conn, selected_app, selected_app_id, start_date, end
         # Fetch missing reviews
         fetch_missing_reviews(conn, selected_app, selected_app_id, missing_ranges['missing'])
 
-        st.success("All missing reviews have been fetched.")
+        if not st.session_state.stop_download:
+            st.success("All missing reviews have been fetched.")
 
 def get_missing_and_available_ranges(existing_ranges, start_date, end_date):
     """Identifies missing and available date ranges within the selected date range."""
@@ -76,6 +78,10 @@ def dates_to_ranges(dates_list):
 
 def fetch_missing_reviews(conn, selected_app, selected_app_id, missing_date_ranges):
     for date_range in missing_date_ranges:
+        if st.session_state.get('stop_download'):
+            st.warning("Download process stopped by user.")
+            break
+
         start_date = date_range['start']
         end_date = date_range['end']
 
@@ -101,6 +107,10 @@ def fetch_missing_reviews(conn, selected_app, selected_app_id, missing_date_rang
         # Clear progress bar and text for this range
         progress_bar.empty()
         progress_text.empty()
+
+        if st.session_state.get('stop_download'):
+            st.warning("Download process stopped by user.")
+            break
 
 def display_reviews(conn, selected_app, start_date, end_date):
     # Fetch reviews from the database
