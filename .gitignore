@@ -2,3 +2,4 @@ venv
 reviews/.idea/
 *.pyc
 __pycache__/
+assets/data/combined_app_reviews.csv
