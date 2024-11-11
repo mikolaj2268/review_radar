@@ -1,13 +1,11 @@
 import streamlit as st
 import sys
-from src.pages import home_page
+from src.pages import home_page, app_analysis_page
 
 # Dictionary mapping page names to functions
 PAGES = {
     "Home": home_page.home_page,
-    # Add other page functions here when they are implemented
-    # "Add Application": add_application_page,
-    # "Refresh Database": refresh_database_page,
+    "App Analysis": app_analysis_page.app_analysis_page,
 }
 
 def main():

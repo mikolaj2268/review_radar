@@ -1,4 +1,5 @@
-# db_utils.py
+# src/database_connection/db_utils.py
+
 from google_play_scraper import search
 import psycopg2
 import pandas as pd
@@ -17,27 +18,6 @@ def get_db_connection():
         password="password"
     )
     return conn
-
-
-def get_app_names(conn):
-    """Fetches a list of distinct application names from the database."""
-    cursor = conn.cursor()
-    cursor.execute("SELECT DISTINCT app_name FROM app_reviews;")
-    apps_in_db = cursor.fetchall()
-    cursor.close()
-    app_names = [app[0] for app in apps_in_db]
-    return app_names
-
-def get_reviews_for_app(conn, app_name):
-    """Retrieves all reviews for a specified application."""
-    query = """
-    SELECT user_name, content, score, at 
-    FROM app_reviews 
-    WHERE app_name = %s 
-    ORDER BY at DESC;
-    """
-    reviews_df = pd.read_sql_query(query, conn, params=(app_name,))
-    return reviews_df
 
 def create_reviews_table(conn):
     """Creates the app_reviews table if it doesn't exist."""
@@ -63,15 +43,38 @@ def create_reviews_table(conn):
     conn.commit()
     cursor.close()
 
-def get_app_id(app_name):
-    """Gets the app ID based on the app name."""
-    try:
-        search_results = search(app_name, n_hits=1, lang='en', country='us')
-        if search_results:
-            app_id = search_results[0]['appId']
-            return app_id
-        else:
-            return None
-    except Exception as e:
-        print(f"Error searching for app '{app_name}': {e}")
-        return None
+def get_reviews_date_ranges(conn, app_name):
+    """Gets all available review date ranges for an app."""
+    cursor = conn.cursor()
+    query = """
+    SELECT MIN(at), MAX(at) FROM app_reviews 
+    WHERE app_name = %s AND at IS NOT NULL
+    GROUP BY DATE(at)
+    """
+    cursor.execute(query, (app_name,))
+    results = cursor.fetchall()
+    cursor.close()
+    if results:
+        date_ranges = [(row[0], row[1]) for row in results]
+        date_ranges.sort(key=lambda x: x[0])
+        return date_ranges
+    else:
+        return []
+
+def get_reviews_for_app(conn, app_name, start_date=None, end_date=None):
+    """Retrieves reviews for a specified application within a date range."""
+    query = """
+    SELECT user_name, content, score, at 
+    FROM app_reviews 
+    WHERE app_name = %s
+    """
+    params = [app_name]
+    if start_date:
+        query += " AND at >= %s"
+        params.append(start_date)
+    if end_date:
+        query += " AND at <= %s"
+        params.append(end_date)
+    query += " ORDER BY at DESC;"
+    reviews_df = pd.read_sql_query(query, conn, params=params)
+    return reviews_df
