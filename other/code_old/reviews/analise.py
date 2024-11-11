@@ -1,11 +1,36 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from wordcloud import WordCloud
+from matplotlib.colors import LinearSegmentedColormap
+
 
 # Wczytaj dane
-data = pd.read_csv('combined_app_reviews.csv')
+data = pd.read_csv('assets/data/combined_app_reviews.csv')
 
 pd.set_option('display.max_columns', None)
+
+all_reviews = ' '.join(data['content'].dropna())
+
+# Define a custom colormap with vibrant colors
+colors = ["#FF66C4", "#FF66C4", "#4CAF50", "#2196F3", "#2E2E2E"]
+custom_cmap = LinearSegmentedColormap.from_list("custom_palette", colors)
+
+# Generate the word cloud with the custom colormap
+wordcloud = WordCloud(
+    width=800,
+    height=400,
+    background_color="white",
+    colormap=custom_cmap,  
+    contour_color="black"
+).generate(all_reviews)
+
+# Display the word cloud
+plt.figure(figsize=(10, 5))
+plt.imshow(wordcloud, interpolation="bilinear")
+plt.axis("off")
+plt.title("Colorful Word Cloud", fontsize=16)
+plt.show()
 
 print("Rodzaj danych i liczba unikalnych wartości w każdej kolumnie:")
 data = data.infer_objects()
@@ -71,3 +96,4 @@ print(data[['reviewCreatedVersion', 'appVersion']].isnull().sum())
 # Rozkład wersji aplikacji
 print("\nRozkład wersji aplikacji w kolumnie 'reviewCreatedVersion':")
 print(data['reviewCreatedVersion'].value_counts(normalize=True).head(10) * 100)
+
