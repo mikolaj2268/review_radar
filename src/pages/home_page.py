@@ -22,7 +22,7 @@ from PIL import Image
 
 from src.functions.gui import create_st_button, get_file_path
 
-st.set_page_config(layout="wide")
+st.set_page_config(page_title="Review Radar", layout="wide")
 
 def home_page():
     # Sidebar links
@@ -47,11 +47,11 @@ def home_page():
         create_st_button(link_text, link_url, st_col=st.sidebar)
 
     # Main content
-    left_col, right_col = st.columns(2)  # 30% dla obrazu, 70% dla tekstu
+    left_col, right_col = st.columns(2)  # 30% for image, 70% for text
 
     with right_col:
         # Add logo or main image
-        img = Image.open("assets/logo/logo.png")  # Zamień na swoją ścieżkę
+        img = Image.open("assets/logo/logo.png") 
         st.image(img, width=250)
 
     with left_col:
@@ -97,7 +97,7 @@ def home_page():
     )
 
     st.markdown("---")
-    
+
     st.markdown(
         """
         ## Features

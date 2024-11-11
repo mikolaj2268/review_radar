@@ -2,7 +2,7 @@ import streamlit as st
 import sys
 from src.pages import home_page
 
-# Słownik mapujący nazwy stron na funkcje
+# Dictionary mapping page names to functions
 PAGES = {
     "Home": home_page.home_page,
     # Add other page functions here when they are implemented
@@ -14,13 +14,13 @@ def main():
     st.sidebar.title("Options")
     selection = st.sidebar.selectbox(
         "Select a page", ["Home", "App Analysis"]
-    )  # Wybór strony
+    )  # Page selection
     if selection in PAGES:
-        page = PAGES[selection]  # Pobierz funkcję odpowiedzialną za daną stronę
-        page()  # Wywołaj funkcję wybranej strony
+        page = PAGES[selection]  # Get the function responsible for the selected page
+        page()  # Call the selected page's function
     else:
         st.write(f"{selection} page is not implemented yet.")
 
 if __name__ == "__main__":
-    sys.path.append("src")  # Dodaj src do ścieżki, aby łatwo importować moduły
+    sys.path.append("src")  # Add src to the path to easily import modules
     main()
