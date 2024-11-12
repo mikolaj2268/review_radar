@@ -96,4 +96,3 @@ print(data[['reviewCreatedVersion', 'appVersion']].isnull().sum())
 # Rozkład wersji aplikacji
 print("\nRozkład wersji aplikacji w kolumnie 'reviewCreatedVersion':")
 print(data['reviewCreatedVersion'].value_counts(normalize=True).head(10) * 100)
-
