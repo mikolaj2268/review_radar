@@ -8,6 +8,53 @@ from src.database_connection.db_utils import (
 )
 from src.functions.scraper import scrape_and_store_reviews  
 
+import pandas as pd
+
+def preprocess_data(df):
+    """
+    Preprocess the given DataFrame.
+    
+    Parameters:
+    df (pd.DataFrame): The input DataFrame to preprocess.
+    
+    Returns:
+    pd.DataFrame: The preprocessed DataFrame.
+    """
+    # Drop duplicates
+    df = df.drop_duplicates()
+
+    # Handle missing values
+    df['content'] = df['content'].fillna('')
+    df['reviewCreatedVersion'] = df['reviewCreatedVersion'].fillna('Unknown')
+    df['appVersion'] = df['appVersion'].fillna('Unknown')
+    df['replyContent'] = df['replyContent'].fillna('')
+    df['repliedAt'] = df['repliedAt'].fillna('')
+
+    # Convert date columns to datetime
+    date_columns = ['at', 'repliedAt']
+    for col in date_columns:
+        if col in df.columns:
+            df[col] = pd.to_datetime(df[col], errors='coerce')
+
+    # Remove rows with invalid scores
+    df = df[(df['score'] >= 1) & (df['score'] <= 5)]
+
+    # Normalize text in 'content' column
+    df['content'] = df['content'].str.lower().str.replace('[^\w\s]', '', regex=True)
+
+    # Add new feature: length of the review content
+    df['content_length'] = df['content'].apply(len)
+
+    # Drop unnecessary columns
+    df = df.drop(columns=['userImage', 'replyContent', 'repliedAt'])
+
+    # Fill missing appVersion values with the closest previous non-null value
+    df = df.sort_values(by='at')
+    df['appVersion'] = df['appVersion'].replace('Unknown', pd.NA)
+    df['appVersion'] = df['appVersion'].fillna(method='ffill')
+
+    return df
+
 def search_and_select_app(search_query):
     # Search for apps via select_app function
     from src.functions.scraper import select_app
