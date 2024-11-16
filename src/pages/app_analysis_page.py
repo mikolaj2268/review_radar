@@ -1,5 +1,8 @@
 # app_analysis_page.py
-
+import re
+from typing import Counter
+import pandas as pd
+import plotly.express as px
 import streamlit as st
 from datetime import datetime, timedelta
 from src.functions.app_analysis_functions import (
@@ -7,8 +10,12 @@ from src.functions.app_analysis_functions import (
     create_tables,
     search_and_select_app,
     check_and_fetch_reviews,
-    display_reviews
+    display_reviews,
+    preprocess_data,
+    plot_content_length_distribution,
+    plot_score_distribution
 )
+from src.database_connection.db_utils import get_reviews_for_app, get_app_data
 
 def app_analysis_page():
     st.title("App Reviews Analysis")
@@ -97,6 +104,55 @@ def app_analysis_page():
         st.dataframe(st.session_state.analysis_result)
     else:
         st.write("No analysis performed yet or no reviews found for the selected date range.")
+    
+    # get the data for the selected app
+    app_data = get_app_data(conn, selected_app)
+    # preprocess the data
+    app_data = preprocess_data(app_data)
+    # content length distribution
 
-    # Close the database connection
+    # Add date slider for filtering by date
+    st.sidebar.write("Filter by Date:")
+    min_date = app_data['date'].min()
+    max_date = app_data['date'].max()
+    selected_date_range = st.sidebar.slider(
+        "Select Date Range",
+        min_value=min_date,
+        max_value=max_date,
+        value=(min_date, max_date)
+    )
+    #display the dates
+    st.write(f"Selected Date Range: {selected_date_range[0]} to {selected_date_range[1]}")
+    # AttributeError: 'float' object has no attribute 'date'
+
+    # Filter the data based on selected date range
+    filtered_data = app_data[(app_data['date'] >= selected_date_range[0]) & (app_data['date'] <= selected_date_range[1])]
+
+        # Add checkboxes for filtering by scores
+    st.sidebar.write("Filter by Scores:")
+    score_filters = {
+        1: st.sidebar.checkbox("1 Star", value=True),
+        2: st.sidebar.checkbox("2 Stars", value=True),
+        3: st.sidebar.checkbox("3 Stars", value=True),
+        4: st.sidebar.checkbox("4 Stars", value=True),
+        5: st.sidebar.checkbox("5 Stars", value=True),
+    }
+
+    # Add multiselect for filtering by app version
+    st.sidebar.write("Filter by App Version:")
+    app_versions = sorted(app_data['app_version'].unique(), reverse=True)
+    selected_versions = st.sidebar.multiselect("Select App Versions", app_versions, default=app_versions)
+
+    # Filter the data based on selected scores
+    selected_scores = [score for score, selected in score_filters.items() if selected]
+    filtered_data = app_data[app_data['score'].isin(selected_scores)]
+
+    # Plot the distribution of scores in streamlit
+    score_fig = plot_score_distribution(filtered_data)
+    st.plotly_chart(score_fig)
+    
+    # plot the distribution of content length in streamlit
+    fig = plot_content_length_distribution(filtered_data)
+    st.plotly_chart(fig)
+
     conn.close()

@@ -78,3 +78,22 @@ def get_reviews_for_app(conn, app_name, start_date=None, end_date=None):
     query += " ORDER BY at DESC;"
     reviews_df = pd.read_sql_query(query, conn, params=params)
     return reviews_df
+
+# get whole app data
+def get_app_data(conn, app_name, start_date=None, end_date=None):
+    """Retrieves data for a specified application within a date range."""
+    query = """
+    SELECT *
+    FROM app_reviews 
+    WHERE app_name = %s
+    """
+    params = [app_name]
+    if start_date:
+        query += " AND at >= %s"
+        params.append(start_date)
+    if end_date:
+        query += " AND at <= %s"
+        params.append(end_date)
+    query += " ORDER BY at DESC;"
+    reviews_df = pd.read_sql_query(query, conn, params=params)
+    return reviews_df

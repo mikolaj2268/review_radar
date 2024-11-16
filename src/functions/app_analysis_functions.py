@@ -7,16 +7,41 @@ from src.database_connection.db_utils import (
     get_reviews_for_app
 )
 from src.functions.scraper import scrape_and_store_reviews  
-
 import pandas as pd
+import plotly.express as px
+
+
+def plot_content_length_distribution(df):
+    """
+    Plot the distribution of content length.
+    Parameters:
+    df (pd.DataFrame): The input DataFrame containing the reviews.
+    Returns:
+    plotly.graph_objs._figure.Figure: The Plotly figure object.
+    """
+    fig = px.histogram(df, x='content_length', nbins=30, title='Distribution of Content Length')
+    fig.update_layout(xaxis_title='Content Length', yaxis_title='Count')
+    return fig
+
+def plot_score_distribution(df):
+    """
+    Plot the distribution of scores.
+    Parameters:
+    df (pd.DataFrame): The input DataFrame containing the reviews.
+    Returns:
+    plotly.graph_objs._figure.Figure: The Plotly figure object.
+    """
+    fig = px.histogram(df, x='score', nbins=5, title='Distribution of Scores')
+    fig.update_layout(xaxis_title='Score', yaxis_title='Count')
+    return fig
 
 def preprocess_data(df):
     """
     Preprocess the given DataFrame.
-    
+
     Parameters:
     df (pd.DataFrame): The input DataFrame to preprocess.
-    
+
     Returns:
     pd.DataFrame: The preprocessed DataFrame.
     """
@@ -25,13 +50,16 @@ def preprocess_data(df):
 
     # Handle missing values
     df['content'] = df['content'].fillna('')
-    df['reviewCreatedVersion'] = df['reviewCreatedVersion'].fillna('Unknown')
-    df['appVersion'] = df['appVersion'].fillna('Unknown')
-    df['replyContent'] = df['replyContent'].fillna('')
-    df['repliedAt'] = df['repliedAt'].fillna('')
+    df['review_created_version'] = df['review_created_version'].fillna('Unknown')
+    df['app_version'] = df['app_version'].fillna('Unknown')
+    df['reply_content'] = df['reply_content'].fillna('')
+    df['replied_at'] = df['replied_at'].fillna(pd.NaT)
+
+    # Copy at column and name it as date and convert it to date type
+    df['date'] = pd.to_datetime(df['at']).dt.date
 
     # Convert date columns to datetime
-    date_columns = ['at', 'repliedAt']
+    date_columns = ['at', 'replied_at']
     for col in date_columns:
         if col in df.columns:
             df[col] = pd.to_datetime(df[col], errors='coerce')
@@ -45,13 +73,18 @@ def preprocess_data(df):
     # Add new feature: length of the review content
     df['content_length'] = df['content'].apply(len)
 
-    # Drop unnecessary columns
-    df = df.drop(columns=['userImage', 'replyContent', 'repliedAt'])
-
-    # Fill missing appVersion values with the closest previous non-null value
+    # Handle missing app_version intelligently
     df = df.sort_values(by='at')
-    df['appVersion'] = df['appVersion'].replace('Unknown', pd.NA)
-    df['appVersion'] = df['appVersion'].fillna(method='ffill')
+    df['app_version'] = df['app_version'].replace('Unknown', pd.NA)
+    df['app_version'] = df['app_version'].fillna(method='ffill')
+
+    # Drop unnecessary columns (comment out if needed)
+    columns_to_drop = ['user_image', 'reply_content', 'replied_at']
+    df = df.drop(columns=[col for col in columns_to_drop if col in df.columns])
+
+    # Handle outliers in thumbs_up_count
+    if 'thumbs_up_count' in df.columns:
+        df['thumbs_up_count'] = df['thumbs_up_count'].clip(lower=0)
 
     return df
 
@@ -171,3 +204,4 @@ def get_db_connection():
 def create_tables(conn):
     from src.database_connection.db_utils import create_reviews_table
     create_reviews_table(conn)
+
