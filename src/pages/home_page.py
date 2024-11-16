@@ -84,15 +84,23 @@ def home_page():
     st.markdown("---")
 
     # Section: Usage
-    st.markdown(
-        """
-        ## Usage: 4 Easy Steps to Improve Your App
-        1. **Go to App Analysis**: Navigate to the section and start your journey.
-        2. **Search Your App**: Enter the name of the app and specify the date range.
-        3. **Analyze the Reviews**: Dive into user feedback to understand their needs.
-        4. **Improve Your App**: Use these insights to enhance your app and delight your customers!
-        """
-    )
+    st.markdown("## Usage: 4 Easy Steps to Improve Your App")
+
+# Create two columns
+    left_col, right_col = st.columns([3, 1])
+
+    with left_col:
+        st.markdown(
+            """
+            1. **Go to App Analysis and Search Your App**: Navigate to the section and Enter the name of the app.
+            2. **Choose Date Range and Download the Data**: specify the date range and click "Download Reviews".
+            3. **Analyze the Reviews**: Dive into user feedback to understand their needs.
+            4. **Improve Your App**: Use these insights to enhance your app and delight your customers!
+            """
+        )
+
+    with right_col:
+        st.image("assets/logo/Usage_diagram.png", width=800)
 
     st.markdown("---")
 
