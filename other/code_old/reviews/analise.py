@@ -6,7 +6,7 @@ from matplotlib.colors import LinearSegmentedColormap
 
 
 # Wczytaj dane
-data = pd.read_csv('assets/data/combined_app_reviews.csv')
+data = pd.read_csv('assets/data/netflix_reviews.csv')
 
 pd.set_option('display.max_columns', None)
 
@@ -96,3 +96,10 @@ print(data[['reviewCreatedVersion', 'appVersion']].isnull().sum())
 # Rozkład wersji aplikacji
 print("\nRozkład wersji aplikacji w kolumnie 'reviewCreatedVersion':")
 print(data['reviewCreatedVersion'].value_counts(normalize=True).head(10) * 100)
+
+# Sprawdź czy reviewCreatedVersion is appVersion sa takie same
+print("\nCzy 'reviewCreatedVersion' jest taka sama jak 'appVersion'?")
+print((data['reviewCreatedVersion'] == data['appVersion']).mean())
+
+# oblicz mi mediane po score
+print("\nMediana długości treści recenzji dla każdej oceny:")
