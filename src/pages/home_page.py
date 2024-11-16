@@ -110,6 +110,7 @@ def home_page():
         - **Data Collection**: Automatically scrape reviews and ratings from Google Play.
         - **Sentiment Analysis**: Detect user sentiment using NLP techniques.
         - **Customizable Visualizations**: Generate insightful charts and graphs.
+        """
     )
 
     st.markdown("---")
