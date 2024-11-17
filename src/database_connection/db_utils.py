@@ -5,16 +5,16 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 
-# Wczytaj zmienne środowiskowe z pliku .env
+# Load environment variables from the .env file
 load_dotenv()
 
 def get_db_connection():
-    """Nawiązuje połączenie z bazą danych SQLite."""
+    """Establishes a connection to the SQLite database."""
     conn = sqlite3.connect('google_play_reviews.db')
     return conn
 
 def create_reviews_table(conn):
-    """Tworzy tabelę app_reviews, jeśli nie istnieje."""
+    """Creates the app_reviews table if it doesn't exist."""
     cursor = conn.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS app_reviews (
@@ -38,7 +38,7 @@ def create_reviews_table(conn):
     cursor.close()
 
 def get_reviews_date_ranges(conn, app_name):
-    """Pobiera dostępne zakresy dat recenzji dla aplikacji."""
+    """Retrieves available date ranges of reviews for the application."""
     cursor = conn.cursor()
     query = """
     SELECT MIN(at), MAX(at) FROM app_reviews 
@@ -56,7 +56,7 @@ def get_reviews_date_ranges(conn, app_name):
         return []
 
 def get_reviews_for_app(conn, app_name, start_date=None, end_date=None):
-    """Pobiera recenzje dla określonej aplikacji w zadanym zakresie dat."""
+    """Fetches reviews for a specific application within the given date range."""
     query = """
     SELECT user_name, content, score, at 
     FROM app_reviews 
@@ -74,7 +74,7 @@ def get_reviews_for_app(conn, app_name, start_date=None, end_date=None):
     return reviews_df
 
 def get_app_data(conn, app_name, start_date=None, end_date=None):
-    """Pobiera pełne dane dla określonej aplikacji w zadanym zakresie dat."""
+    """Fetches complete data for a specific application within the given date range."""
     query = """
     SELECT *
     FROM app_reviews 
