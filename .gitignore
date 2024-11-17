@@ -1,5 +1,78 @@
-venv
+# Ignore virtual environment
+venv/
+
+# Ignore IDE configuration files (PyCharm, IntelliJ, etc.)
 reviews/.idea/
+
+# Ignore Python compiled files
 *.pyc
 __pycache__/
+
+# Ignore application data
 assets/data/combined_app_reviews.csv
+
+# Ignore all CSV files
+*.csv
+
+# Ignore log files
+*.log
+
+# Ignore test results
+.pytest_cache/
+.tox/
+coverage/
+*.cover
+*.py[cod]
+htmlcov/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Ignore build artifacts
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+
+# Ignore system and editor-specific files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.bak
+*.tmp
+~$*
+
+# Ignore environment configuration files
+.env
+.env.*
+.venv/
+env/
+env.bak/
+
+# Ignore output and export directories
+out/
+export/
+
+# Ignore linter tool caches and reports
+.mypy_cache/
+pylint-report.txt
+pylint.log
+
+# Ignore editor-generated folders
+.idea/
+.vscode/
+
+# Ignore Docker configuration overrides
+docker-compose.override.yml
+
+# Ignore sensitive files and tokens
+secrets.json
+*.key
+*.pem
+
+# Ignore database files
+google_play_reviews.db

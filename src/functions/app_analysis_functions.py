@@ -38,54 +38,42 @@ def plot_score_distribution(df):
 def preprocess_data(df):
     """
     Preprocess the given DataFrame.
-
     Parameters:
     df (pd.DataFrame): The input DataFrame to preprocess.
-
     Returns:
     pd.DataFrame: The preprocessed DataFrame.
     """
     # Drop duplicates
     df = df.drop_duplicates()
-
     # Handle missing values
     df['content'] = df['content'].fillna('')
     df['review_created_version'] = df['review_created_version'].fillna('Unknown')
     df['app_version'] = df['app_version'].fillna('Unknown')
     df['reply_content'] = df['reply_content'].fillna('')
     df['replied_at'] = df['replied_at'].fillna(pd.NaT)
-
     # Copy at column and name it as date and convert it to date type
     df['date'] = pd.to_datetime(df['at']).dt.date
-
     # Convert date columns to datetime
     date_columns = ['at', 'replied_at']
     for col in date_columns:
         if col in df.columns:
             df[col] = pd.to_datetime(df[col], errors='coerce')
-
     # Remove rows with invalid scores
     df = df[(df['score'] >= 1) & (df['score'] <= 5)]
-
     # Normalize text in 'content' column
-    df['content'] = df['content'].str.lower().str.replace('[^\w\s]', '', regex=True)
-
+    df['content'] = df['content'].str.lower().str.replace(r'[^\w\s]', '', regex=True)
     # Add new feature: length of the review content
     df['content_length'] = df['content'].apply(len)
-
     # Handle missing app_version intelligently
     df = df.sort_values(by='at')
     df['app_version'] = df['app_version'].replace('Unknown', pd.NA)
-    df['app_version'] = df['app_version'].fillna(method='ffill')
-
+    df['app_version'] = df['app_version'].ffill()
     # Drop unnecessary columns (comment out if needed)
     columns_to_drop = ['user_image', 'reply_content', 'replied_at']
     df = df.drop(columns=[col for col in columns_to_drop if col in df.columns])
-
     # Handle outliers in thumbs_up_count
     if 'thumbs_up_count' in df.columns:
         df['thumbs_up_count'] = df['thumbs_up_count'].clip(lower=0)
-
     return df
 
 def search_and_select_app(search_query):

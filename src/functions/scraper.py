@@ -1,5 +1,6 @@
 # src/functions/scraper.py
 
+import sqlite3
 import pandas as pd
 from google_play_scraper import Sort, reviews, search
 from datetime import datetime, timedelta
@@ -15,7 +16,7 @@ def select_app(app_name):
         return []
 
 def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress_text=None, start_date=None, end_date=None, country='us', language='en'):
-    """Scrapes reviews and stores them in the PostgreSQL database with a progress bar based on date range."""
+    """Scrapes reviews and stores them in the SQLite database with a progress bar based on date range."""
     cursor = conn.cursor()
 
     # Ensure start_date and end_date are datetime objects
@@ -33,9 +34,7 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
     continuation_token = None
 
     # Calculate total seconds in the date range
-    total_seconds = (end_date - start_date).total_seconds()
-    if total_seconds == 0:
-        total_seconds = 1  # Prevent division by zero
+    total_seconds = (end_date - start_date).total_seconds() or 1  # Prevent division by zero
 
     oldest_review_date_fetched = end_date  # Initialize with end_date
 
@@ -62,7 +61,7 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
 
         # Filter reviews within the date range
         new_reviews_in_range = [review for review in new_reviews if start_date <= review['at'] <= end_date]
-        
+
         # Check if no reviews are in the desired date range
         if not new_reviews_in_range:
             # If the oldest review in the batch is older than start_date, we can stop
@@ -72,7 +71,7 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
                 # Continue to next batch
                 continue
 
-        # Add all reviews in range to the list
+        # Add all reviews in range to the total count
         total_reviews_fetched += len(new_reviews_in_range)
 
         # Update oldest_review_date_fetched
@@ -82,18 +81,14 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
 
         # Calculate progress based on the date range
         elapsed_seconds = (end_date - oldest_review_date_fetched).total_seconds()
-        progress = elapsed_seconds / total_seconds  # Fixed progress calculation
-        if progress > 1:
-            progress = 1
-        if progress < 0:
-            progress = 0
+        progress = min(max(elapsed_seconds / total_seconds, 0), 1)  # Ensure progress is between 0 and 1
 
         # Update progress bar and text
         if progress_bar is not None and progress_text is not None:
             progress_bar.progress(progress)
             progress_text.write(f"**{app_name}: Fetched {total_reviews_fetched} reviews so far...** Progress: {progress*100:.2f}%")
 
-        # Insert data into PostgreSQL
+        # Prepare DataFrame
         reviews_df = pd.DataFrame(new_reviews_in_range)
         reviews_df['app_name'] = app_name
         reviews_df['country'] = country
@@ -103,16 +98,25 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
         reviews_df = reviews_df.replace({pd.NaT: None})
         reviews_df = reviews_df.where(pd.notnull(reviews_df), None)
 
-        # Insert reviews into the database, handle duplicates with ON CONFLICT DO NOTHING
+        # Convert datetime fields to strings
+        datetime_fields = ['at', 'repliedAt']
+        for field in datetime_fields:
+            if field in reviews_df.columns:
+                reviews_df[field] = reviews_df[field].apply(lambda x: x.isoformat() if x is not None else None)
+
+        # Prepare the SQL statement with '?' placeholders
+        insert_query = '''
+            INSERT INTO app_reviews (
+                review_id, user_name, user_image, content, score, thumbs_up_count,
+                review_created_version, at, reply_content, replied_at, app_version,
+                app_name, country, language
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(review_id) DO NOTHING;
+        '''
+
+        # Insert reviews into the database
         for _, row in reviews_df.iterrows():
-            cursor.execute('''
-                INSERT INTO app_reviews (
-                    review_id, user_name, user_image, content, score, thumbs_up_count,
-                    review_created_version, at, reply_content, replied_at, app_version,
-                    app_name, country, language
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (review_id) DO NOTHING;
-            ''', (
+            cursor.execute(insert_query, (
                 row['reviewId'],
                 row['userName'],
                 row['userImage'],
@@ -120,9 +124,9 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
                 row['score'],
                 row['thumbsUpCount'],
                 row.get('reviewCreatedVersion', None),
-                row['at'],
+                row['at'],  # Converted to string
                 row.get('replyContent', None),
-                row.get('repliedAt', None),
+                row.get('repliedAt', None),  # Converted to string
                 row.get('appVersion', None),
                 app_name,
                 country,
