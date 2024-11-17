@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0.1 Safari/605.1.15" version="24.8.4">
   <diagram name="Page-1" id="97916047-d0de-89f5-080d-49f4d83e522f">
-    <mxGraphModel dx="2947.5" dy="647" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1.5" pageWidth="1169" pageHeight="827" background="none" math="0" shadow="0">
+    <mxGraphModel dx="3158.5" dy="761" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1.5" pageWidth="1169" pageHeight="827" background="none" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -19,11 +19,8 @@
         <mxCell id="3" value="Check requirements, Access the data" style="rounded=1;fillColor=#10739E;strokeColor=none;shadow=1;gradientColor=none;fontStyle=1;fontColor=#FFFFFF;fontSize=14;" parent="1" vertex="1">
           <mxGeometry x="460" y="360" width="308" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="4" value="Request for &#xa;Data Refreshment" style="rounded=1;fillColor=#006600;strokeColor=none;shadow=1;gradientColor=none;fontStyle=1;fontColor=#FFFFFF;fontSize=14;" parent="1" vertex="1">
-          <mxGeometry x="30" y="550" width="200" height="60" as="geometry" />
-        </mxCell>
         <mxCell id="5" value="Request for Data Scraping" style="rounded=1;fillColor=#006600;strokeColor=none;shadow=1;gradientColor=none;fontStyle=1;fontColor=#FFFFFF;fontSize=14;" parent="1" vertex="1">
-          <mxGeometry x="270" y="550" width="200" height="60" as="geometry" />
+          <mxGeometry x="165" y="540" width="200" height="60" as="geometry" />
         </mxCell>
         <mxCell id="6" value="Request for App/Apps Analysis" style="rounded=1;fillColor=#006600;strokeColor=none;shadow=1;gradientColor=none;fontStyle=1;fontColor=#FFFFFF;fontSize=14;" parent="1" vertex="1">
           <mxGeometry x="916.5" y="529.5" width="260" height="60" as="geometry" />
@@ -124,17 +121,6 @@
             <Array as="points" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="wYoVtWXYN8VsOcOLvKbg-68" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;strokeWidth=4;endArrow=block;endFill=1;fontStyle=1;strokeColor=#23445D;entryX=0.455;entryY=0.017;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="3" target="4" edge="1">
-          <mxGeometry x="22" y="165.5" width="100" height="100" as="geometry">
-            <mxPoint x="458" y="433" as="sourcePoint" />
-            <mxPoint x="290" y="470" as="targetPoint" />
-            <Array as="points">
-              <mxPoint x="340" y="450" />
-              <mxPoint x="520" y="520" />
-              <mxPoint x="300" y="530" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
         <mxCell id="wYoVtWXYN8VsOcOLvKbg-71" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;Data Module&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="380" y="475" width="180" height="30" as="geometry" />
         </mxCell>
@@ -145,12 +131,6 @@
             <Array as="points">
               <mxPoint x="230.5" y="759.5" />
             </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="wYoVtWXYN8VsOcOLvKbg-77" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;strokeWidth=4;endArrow=block;endFill=1;fontStyle=1;strokeColor=#23445D;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="4" target="8" edge="1">
-          <mxGeometry x="62" y="175.5" width="100" height="100" as="geometry">
-            <mxPoint x="379.5" y="620" as="sourcePoint" />
-            <mxPoint x="379.5" y="680" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="wYoVtWXYN8VsOcOLvKbg-78" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;strokeWidth=4;endArrow=block;endFill=1;fontStyle=1;strokeColor=#23445D;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="5" target="8" edge="1">
