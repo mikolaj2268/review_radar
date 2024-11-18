@@ -115,12 +115,16 @@ def app_analysis_page():
     st.sidebar.write("Filter by Date:")
     min_date = app_data['date'].min()
     max_date = app_data['date'].max()
-    selected_date_range = st.sidebar.slider(
-        "Select Date Range",
-        min_value=min_date,
-        max_value=max_date,
-        value=(min_date, max_date)
-    )
+    if min_date < max_date:
+        selected_date_range = st.sidebar.slider(
+            "Select Date Range",
+            min_value=min_date,
+            max_value=max_date,
+            value=(min_date, max_date)
+        )
+    else:
+        st.sidebar.warning("Not enough data to display the date range slider.")
+        selected_date_range = (min_date, max_date)
     #display the dates
     st.write(f"Selected Date Range: {selected_date_range[0]} to {selected_date_range[1]}")
     # AttributeError: 'float' object has no attribute 'date'
@@ -140,6 +144,7 @@ def app_analysis_page():
 
     # Add multiselect for filtering by app version
     st.sidebar.write("Filter by App Version:")
+    app_data['app_version'] = app_data['app_version'].fillna('Unknown')
     app_versions = sorted(app_data['app_version'].unique(), reverse=True)
     selected_versions = st.sidebar.multiselect("Select App Versions", app_versions, default=app_versions)
 
