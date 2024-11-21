@@ -98,6 +98,8 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
         reviews_df = reviews_df.replace({pd.NaT: None})
         reviews_df = reviews_df.where(pd.notnull(reviews_df), None)
 
+        reviews_df['at'] = pd.to_datetime(reviews_df['at']).dt.date
+
         # Convert datetime fields to strings
         datetime_fields = ['at', 'repliedAt']
         for field in datetime_fields:

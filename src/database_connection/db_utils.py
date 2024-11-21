@@ -38,22 +38,15 @@ def create_reviews_table(conn):
     cursor.close()
 
 def get_reviews_date_ranges(conn, app_name):
-    """Retrieves available date ranges of reviews for the application."""
     cursor = conn.cursor()
-    query = """
-    SELECT MIN(at), MAX(at) FROM app_reviews 
-    WHERE app_name = ? AND at IS NOT NULL
-    GROUP BY DATE(at)
-    """
-    cursor.execute(query, (app_name,))
-    results = cursor.fetchall()
+    cursor.execute('''
+        SELECT DISTINCT date(at) as review_date FROM app_reviews WHERE app_name = ?
+    ''', (app_name,))
+    dates = cursor.fetchall()
     cursor.close()
-    if results:
-        date_ranges = [(row[0], row[1]) for row in results]
-        date_ranges.sort(key=lambda x: x[0])
-        return date_ranges
-    else:
-        return []
+    # Convert list of tuples to a set of dates
+    existing_dates = set(date[0] for date in dates if date[0])
+    return existing_dates
 
 def get_reviews_for_app(conn, app_name, start_date=None, end_date=None):
     """Fetches reviews for a specific application within the given date range."""
