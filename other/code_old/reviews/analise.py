@@ -103,3 +103,64 @@ print((data['reviewCreatedVersion'] == data['appVersion']).mean())
 
 # oblicz mi mediane po score
 print("\nMediana długości treści recenzji dla każdej oceny:")
+
+# preprocessing
+def preprocess_data(df, model = None):
+    """
+    Preprocess the given DataFrame.
+    Parameters:
+    df (pd.DataFrame): The input DataFrame to preprocess.
+    Returns:
+    pd.DataFrame: The preprocessed DataFrame.
+    """
+    # Drop duplicates
+    df = df.drop_duplicates()
+
+    # Remove rows with invalid scores
+    df = df[(df['score'] >= 1) & (df['score'] <= 5)]
+    
+    # set the content length maximum to 500
+    df = df[df['content'].apply(len) <= 500]
+
+    if (model == 'VADER'):
+        # Remove special characters from the content
+        reviews['clean_content'] = reviews['content'].str.replace('[^\w\s]', '')
+
+    # Handle missing values
+    df['content'] = df['content'].fillna('')
+    df['review_created_version'] = df['review_created_version'].fillna('Unknown')
+    df['app_version'] = df['app_version'].fillna('Unknown')
+    df['reply_content'] = df['reply_content'].fillna('')
+    df['replied_at'] = df['replied_at'].fillna(pd.NaT)
+
+    # Convert 'at' to datetime and create 'date' column
+    df['at'] = pd.to_datetime(df['at'], errors='coerce')
+    df = df.dropna(subset=['at'])  # Remove rows with invalid dates
+    df['date'] = df['at'].dt.date
+
+    # Convert other date columns to datetime
+    date_columns = ['replied_at']
+    for col in date_columns:
+        if col in df.columns:
+            df[col] = pd.to_datetime(df[col], errors='coerce')
+
+    # Normalize text in 'content' column
+    df['content'] = df['content'].str.lower().str.replace(r'[^\w\s]', '', regex=True)
+
+    # Add new feature: length of the review content
+    df['content_length'] = df['content'].apply(len)
+
+    # Handle missing app_version intelligently
+    df = df.sort_values(by='at')
+    df['app_version'] = df['app_version'].replace('Unknown', pd.NA)
+    df['app_version'] = df['app_version'].ffill()
+
+    # Drop unnecessary columns
+    columns_to_drop = ['user_image', 'reply_content', 'replied_at']
+    df = df.drop(columns=[col for col in columns_to_drop if col in df.columns])
+
+    # Handle outliers in thumbs_up_count
+    if 'thumbs_up_count' in df.columns:
+        df['thumbs_up_count'] = df['thumbs_up_count'].clip(lower=0)
+
+    return df
