@@ -34,57 +34,74 @@ def plot_score_distribution(df):
     fig.update_layout(xaxis_title='Score', yaxis_title='Count')
     return fig
 
-def preprocess_data(df):
+def preprocess_data(df, model=None, min_records=100, null_threshold=0.4):
     """
-    Preprocess the given DataFrame.
+    Preprocess the given DataFrame for sentiment analysis and visualization.
+    
     Parameters:
     df (pd.DataFrame): The input DataFrame to preprocess.
+    model (str, optional): The sentiment analysis model ('VADER' or 'Transformers').
+    min_records (int, optional): Minimum records required for reliable analysis.
+    null_threshold (float, optional): Maximum allowed null ratio per column before dropping it.
+    
     Returns:
     pd.DataFrame: The preprocessed DataFrame.
     """
-    # Drop duplicates
+    # Step 1: Basic Cleanup
     df = df.drop_duplicates()
-
-    # Handle missing values
-    df['content'] = df['content'].fillna('')
-    df['review_created_version'] = df['review_created_version'].fillna('Unknown')
-    df['app_version'] = df['app_version'].fillna('Unknown')
+    df = df[(df['score'] >= 1) & (df['score'] <= 5)]
+    df = df[df['content'].notna() & (df['content'].str.len() <= 500)]
+    
+    # Step 2: Null Handling
+    for col in ['content', 'review_created_version', 'app_version']:
+        df[col] = df[col].fillna('Unknown')
     df['reply_content'] = df['reply_content'].fillna('')
     df['replied_at'] = df['replied_at'].fillna(pd.NaT)
-
-    # Convert 'at' to datetime and create 'date' column
+    
+    # Drop columns with excessive nulls
+    null_ratios = df.isnull().mean()
+    cols_to_drop = null_ratios[null_ratios > null_threshold].index
+    df = df.drop(columns=cols_to_drop, errors='ignore')
+    
+    # Step 3: Date Parsing
     df['at'] = pd.to_datetime(df['at'], errors='coerce')
     df = df.dropna(subset=['at'])  # Remove rows with invalid dates
     df['date'] = df['at'].dt.date
-
-    # Convert other date columns to datetime
-    date_columns = ['replied_at']
-    for col in date_columns:
-        if col in df.columns:
-            df[col] = pd.to_datetime(df[col], errors='coerce')
-
-    # Remove rows with invalid scores
-    df = df[(df['score'] >= 1) & (df['score'] <= 5)]
-
-    # Normalize text in 'content' column
+    
+    if 'replied_at' in df.columns:
+        df['replied_at'] = pd.to_datetime(df['replied_at'], errors='coerce')
+    
+    # Step 4: Normalize Text
     df['content'] = df['content'].str.lower().str.replace(r'[^\w\s]', '', regex=True)
-
-    # Add new feature: length of the review content
-    df['content_length'] = df['content'].apply(len)
-
-    # Handle missing app_version intelligently
-    df = df.sort_values(by='at')
-    df['app_version'] = df['app_version'].replace('Unknown', pd.NA)
-    df['app_version'] = df['app_version'].ffill()
-
-    # Drop unnecessary columns
-    columns_to_drop = ['user_image', 'reply_content', 'replied_at']
-    df = df.drop(columns=[col for col in columns_to_drop if col in df.columns])
-
-    # Handle outliers in thumbs_up_count
+    
+    if model == 'VADER':
+        df['clean_content'] = df['content'].str.replace(r'[^\w\s]', '', regex=True)
+    
+    # Step 5: Add Features
+    df['content_length'] = df['content'].str.len()
     if 'thumbs_up_count' in df.columns:
         df['thumbs_up_count'] = df['thumbs_up_count'].clip(lower=0)
-
+    
+    # Step 6: Handle Small Datasets
+    if len(df) < min_records:
+        print(f"Warning: The dataset contains only {len(df)} records. Consider collecting more data.")
+    
+    # Step 7: Tokenization and Stop Words Removal (Optional for Transformer Models)
+    if model == 'Transformers':
+        from nltk.tokenize import word_tokenize
+        from nltk.corpus import stopwords
+        import nltk
+        nltk.download('punkt')
+        nltk.download('stopwords')
+        
+        stop_words = set(stopwords.words('english'))
+        df['tokens'] = df['content'].apply(lambda x: [word for word in word_tokenize(x) if word not in stop_words])
+    
+    # Step 8: Drop Columns with Too Few Unique Values
+    unique_counts = df.nunique()
+    low_variance_cols = unique_counts[unique_counts <= 1].index
+    df = df.drop(columns=low_variance_cols, errors='ignore')
+    
     return df
 
 def search_and_select_app(search_query):
