@@ -54,13 +54,14 @@ def preprocess_data(df, model=None, min_records=100, null_threshold=0.4):
     
     # Step 2: Null Handling
     for col in ['content', 'review_created_version', 'app_version']:
-        df[col] = df[col].fillna('Unknown')
+        df[col] = df[col].fillna('')
     df['reply_content'] = df['reply_content'].fillna('')
     df['replied_at'] = df['replied_at'].fillna(pd.NaT)
     
     # Drop columns with excessive nulls
+    critical_columns = ['content', 'score', 'at']
     null_ratios = df.isnull().mean()
-    cols_to_drop = null_ratios[null_ratios > null_threshold].index
+    cols_to_drop = null_ratios[(null_ratios > null_threshold) & (~null_ratios.index.isin(critical_columns))].index
     df = df.drop(columns=cols_to_drop, errors='ignore')
     
     # Step 3: Date Parsing
@@ -72,7 +73,7 @@ def preprocess_data(df, model=None, min_records=100, null_threshold=0.4):
         df['replied_at'] = pd.to_datetime(df['replied_at'], errors='coerce')
     
     # Step 4: Normalize Text
-    df['content'] = df['content'].str.lower().str.replace(r'[^\w\s]', '', regex=True)
+    df['content'] = df['content'].str.lower()
     
     if model == 'VADER':
         df['clean_content'] = df['content'].str.replace(r'[^\w\s]', '', regex=True)
@@ -96,11 +97,6 @@ def preprocess_data(df, model=None, min_records=100, null_threshold=0.4):
         
         stop_words = set(stopwords.words('english'))
         df['tokens'] = df['content'].apply(lambda x: [word for word in word_tokenize(x) if word not in stop_words])
-    
-    # Step 8: Drop Columns with Too Few Unique Values
-    unique_counts = df.nunique()
-    low_variance_cols = unique_counts[unique_counts <= 1].index
-    df = df.drop(columns=low_variance_cols, errors='ignore')
     
     return df
 
