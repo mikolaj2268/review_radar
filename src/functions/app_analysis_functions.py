@@ -95,14 +95,6 @@ def preprocess_data(df, model=None, min_records=100, apply_lemmatization=True, c
     df['reply_content'] = df['reply_content'].fillna('')
     df['replied_at'] = df['replied_at'].fillna(pd.NaT)
     
-    # Drop columns with excessive nulls
-    critical_columns = ['content', 'score', 'at']
-    null_ratios = df.isnull().mean()
-    cols_to_drop = null_ratios[
-        (null_ratios > null_threshold) & (~null_ratios.index.isin(critical_columns))
-    ].index
-    df = df.drop(columns=cols_to_drop, errors='ignore')
-    
     # Step 3: Date Parsing
     df['at'] = pd.to_datetime(df['at'], errors='coerce')
     df = df.dropna(subset=['at'])  # Remove rows with invalid dates
