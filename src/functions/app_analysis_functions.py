@@ -9,12 +9,15 @@ from src.database_connection.db_utils import (
     get_reviews_for_app
 )
 from src.functions.scraper import scrape_and_store_reviews
+from collections import Counter
 
 def plot_content_length_distribution(df):
     """
     Plot the distribution of content length.
+    
     Parameters:
     df (pd.DataFrame): The input DataFrame containing the reviews.
+    
     Returns:
     plotly.graph_objs._figure.Figure: The Plotly figure object.
     """
@@ -25,13 +28,26 @@ def plot_content_length_distribution(df):
 def plot_score_distribution(df):
     """
     Plot the distribution of scores.
+    
     Parameters:
     df (pd.DataFrame): The input DataFrame containing the reviews.
+    
     Returns:
     plotly.graph_objs._figure.Figure: The Plotly figure object.
     """
-    fig = px.histogram(df, x='score', nbins=5, title='Distribution of Scores')
-    fig.update_layout(xaxis_title='Score', yaxis_title='Count')
+    fig = px.histogram(
+        df, 
+        x='score', 
+        nbins=5, 
+        title='Distribution of Scores',
+        category_orders={'score': [1, 2, 3, 4, 5]}
+    )
+    fig.update_layout(
+        xaxis_title='Score', 
+        yaxis_title='Percentage',
+        yaxis=dict(tickformat=".0%")
+    )
+    fig.update_traces(texttemplate='%{y:.2%}', textposition='outside')
     return fig
 
 def preprocess_data(df, model=None, min_records=100, null_threshold=0.4):
@@ -61,7 +77,9 @@ def preprocess_data(df, model=None, min_records=100, null_threshold=0.4):
     # Drop columns with excessive nulls
     critical_columns = ['content', 'score', 'at']
     null_ratios = df.isnull().mean()
-    cols_to_drop = null_ratios[(null_ratios > null_threshold) & (~null_ratios.index.isin(critical_columns))].index
+    cols_to_drop = null_ratios[
+        (null_ratios > null_threshold) & (~null_ratios.index.isin(critical_columns))
+    ].index
     df = df.drop(columns=cols_to_drop, errors='ignore')
     
     # Step 3: Date Parsing
@@ -85,13 +103,14 @@ def preprocess_data(df, model=None, min_records=100, null_threshold=0.4):
     
     # Step 6: Handle Small Datasets
     if len(df) < min_records:
-        print(f"Warning: The dataset contains only {len(df)} records. Consider collecting more data.")
+        st.warning(f"Warning: The dataset contains only {len(df)} records. Consider collecting more data.")
     
     # Step 7: Tokenization and Stop Words Removal (Optional for Transformer Models)
     if model == 'Transformers':
+        import nltk
         from nltk.tokenize import word_tokenize
         from nltk.corpus import stopwords
-        import nltk
+        
         nltk.download('punkt')
         nltk.download('stopwords')
         
@@ -101,12 +120,32 @@ def preprocess_data(df, model=None, min_records=100, null_threshold=0.4):
     return df
 
 def search_and_select_app(search_query):
-    # Search for apps via select_app function
+    """
+    Search for applications based on the search query.
+    
+    Parameters:
+    search_query (str): The search term entered by the user.
+    
+    Returns:
+    list: A list of search results.
+    """
     from src.functions.scraper import select_app
     search_results = select_app(search_query)
     return search_results
 
-def check_and_fetch_reviews(conn, selected_app, selected_app_id, start_date, end_date):
+def check_and_fetch_reviews(conn, selected_app, selected_app_id, start_date, end_date, status_placeholder, missing_placeholder):
+    """
+    Check for missing reviews and fetch them if necessary.
+    
+    Parameters:
+    conn: Database connection object.
+    selected_app (str): The name of the selected application.
+    selected_app_id (str): The ID of the selected application.
+    start_date (datetime): The start date for fetching reviews.
+    end_date (datetime): The end date for fetching reviews.
+    status_placeholder: Streamlit placeholder for status messages.
+    missing_placeholder: Streamlit placeholder for missing date ranges.
+    """
     # Get existing review dates for the app
     existing_dates = get_reviews_date_ranges(conn, selected_app)
 
@@ -114,66 +153,45 @@ def check_and_fetch_reviews(conn, selected_app, selected_app_id, start_date, end
     missing_ranges = get_missing_and_available_ranges(existing_dates, start_date, end_date)
 
     if not missing_ranges['missing']:
-        st.success(f"Reviews for {selected_app} from {start_date} to {end_date} are up-to-date.")
+        status_placeholder.success(f"Reviews for **{selected_app}** from {start_date} to {end_date} are up-to-date.")
     else:
         # Display missing date ranges
-        st.warning("Data is incomplete. Fetching missing reviews...")
+        status_placeholder.warning("Data is incomplete. Fetching missing reviews...")
         for missing_range in missing_ranges['missing']:
-            st.info(f"- Missing: {missing_range[0]} to {missing_range[1]}")
+            missing_placeholder.info(f"- Missing: {missing_range[0]} to {missing_range[1]}")
 
         # Fetch missing reviews
-        fetch_missing_reviews(conn, selected_app, selected_app_id, missing_ranges['missing'])
+        fetch_missing_reviews(conn, selected_app, selected_app_id, missing_ranges['missing'], status_placeholder, missing_placeholder)
+
+        # Clear placeholders after fetching
+        status_placeholder.empty()
+        missing_placeholder.empty()
 
         if not st.session_state.get('stop_download'):
-            st.success("All missing reviews have been fetched.")
+            status_placeholder.success("All missing reviews have been fetched.")
 
-def get_missing_and_available_ranges(existing_dates, start_date, end_date):
-    total_date_set = set(start_date + timedelta(days=x) for x in range((end_date - start_date).days + 1))
-    missing_date_set = total_date_set - existing_dates
-    available_date_set = existing_dates & total_date_set
-
-    # Convert date sets into sorted lists
-    missing_dates = sorted(missing_date_set)
-    available_dates = sorted(available_date_set)
-
-    # Convert dates into continuous ranges
-    missing_ranges = dates_to_ranges(missing_dates)
-    available_ranges = dates_to_ranges(available_dates)
-
-    return {
-        'missing': missing_ranges,
-        'available': available_ranges
-    }
-
-def dates_to_ranges(dates_list):
-    """Converts a sorted list of dates into a list of continuous date ranges."""
-    if not dates_list:
-        return []
-
-    ranges = []
-    start_date = dates_list[0]
-    end_date = dates_list[0]
-
-    for date in dates_list[1:]:
-        if date == end_date + timedelta(days=1):
-            end_date = date
-        else:
-            ranges.append((start_date, end_date))
-            start_date = date
-            end_date = date
-
-    ranges.append((start_date, end_date))
-    return ranges
-
-def fetch_missing_reviews(conn, selected_app, selected_app_id, missing_ranges):
+def fetch_missing_reviews(conn, selected_app, selected_app_id, missing_ranges, status_placeholder, missing_placeholder):
+    """
+    Fetch and store missing reviews for the specified date ranges.
+    
+    Parameters:
+    conn: Database connection object.
+    selected_app (str): The name of the selected application.
+    selected_app_id (str): The ID of the selected application.
+    missing_ranges (list of tuples): List of missing date ranges.
+    status_placeholder: Streamlit placeholder for status messages.
+    missing_placeholder: Streamlit placeholder for missing date ranges.
+    """
     for index, date_range in enumerate(missing_ranges):
         start_date = date_range[0]
         end_date = date_range[1]
         if st.session_state.get('stop_download'):
-            st.warning("Download process stopped by user.")
+            status_placeholder.warning("Download process stopped by user.")
             break
 
-        st.info(f"Fetching reviews from {start_date} to {end_date}...")
+        # Display fetching message
+        fetch_placeholder = st.empty()
+        fetch_placeholder.info(f"Fetching reviews from {start_date} to {end_date}...")
 
         # Initialize progress bar and text placeholders for this range
         progress_bar = st.progress(0)
@@ -195,19 +213,101 @@ def fetch_missing_reviews(conn, selected_app, selected_app_id, missing_ranges):
         # Clear progress bar and text for this range
         progress_bar.empty()
         progress_text.empty()
+        fetch_placeholder.empty()
 
     if not st.session_state.get('stop_download'):
-        st.success("Finished fetching missing reviews.")
+        status_placeholder.success("Finished fetching missing reviews.")
+
+def get_missing_and_available_ranges(existing_dates, start_date, end_date):
+    """
+    Calculate missing and available date ranges based on existing data.
+    
+    Parameters:
+    existing_dates (set): Set of existing dates with reviews.
+    start_date (datetime): The start date for fetching reviews.
+    end_date (datetime): The end date for fetching reviews.
+    
+    Returns:
+    dict: Dictionary containing 'missing' and 'available' date ranges.
+    """
+    total_date_set = set(start_date + timedelta(days=x) for x in range((end_date - start_date).days + 1))
+    missing_date_set = total_date_set - existing_dates
+    available_date_set = existing_dates & total_date_set
+
+    # Convert date sets into sorted lists
+    missing_dates = sorted(missing_date_set)
+    available_dates = sorted(available_date_set)
+
+    # Convert dates into continuous ranges
+    missing_ranges = dates_to_ranges(missing_dates)
+    available_ranges = dates_to_ranges(available_dates)
+
+    return {
+        'missing': missing_ranges,
+        'available': available_ranges
+    }
+
+def dates_to_ranges(dates_list):
+    """
+    Convert a sorted list of dates into continuous date ranges.
+    
+    Parameters:
+    dates_list (list): Sorted list of datetime objects.
+    
+    Returns:
+    list of tuples: List containing tuples of (start_date, end_date).
+    """
+    if not dates_list:
+        return []
+
+    ranges = []
+    start_date = dates_list[0]
+    end_date = dates_list[0]
+
+    for current_date in dates_list[1:]:
+        if current_date == end_date + timedelta(days=1):
+            end_date = current_date
+        else:
+            ranges.append((start_date, end_date))
+            start_date = current_date
+            end_date = current_date
+
+    ranges.append((start_date, end_date))
+    return ranges
 
 def display_reviews(conn, selected_app, start_date, end_date):
+    """
+    Fetch and return reviews for the selected application within the specified date range.
+    
+    Parameters:
+    conn: Database connection object.
+    selected_app (str): The name of the selected application.
+    start_date (datetime): The start date for fetching reviews.
+    end_date (datetime): The end date for fetching reviews.
+    
+    Returns:
+    pd.DataFrame: DataFrame containing the fetched reviews.
+    """
     # Fetch reviews from the database
     reviews_df = get_reviews_for_app(conn, selected_app, start_date, end_date)
     return reviews_df
 
 def get_db_connection():
+    """
+    Establish and return a database connection.
+    
+    Returns:
+    Connection object: The database connection.
+    """
     from src.database_connection.db_utils import get_db_connection as db_get_db_connection
     return db_get_db_connection()
 
 def create_tables(conn):
+    """
+    Create necessary tables in the database.
+    
+    Parameters:
+    conn: Database connection object.
+    """
     from src.database_connection.db_utils import create_reviews_table
     create_reviews_table(conn)
