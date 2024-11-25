@@ -103,11 +103,4 @@ secrets.json
 
 # Ignore database files
 google_play_reviews.db
-<<<<<<< HEAD
 .DS_Store
-=======
-google_play_reviews_empty.db
-
-# Ignore DS_Store files
-.DS_Store
->>>>>>> d09adce646f4e3b74d0f1fc52a8803be08e845c4
