@@ -122,6 +122,8 @@ rfc3986-validator==0.1.1
 rich==13.9.4
 rpds-py==0.21.0
 safetensors==0.4.5
+scikit-learn==1.5.2
+scipy==1.14.1
 Send2Trash==1.8.3
 setuptools==75.6.0
 six==1.16.0
@@ -139,6 +141,7 @@ termcolor==2.5.0
 terminado==0.18.1
 textblob==0.18.0.post0
 tf_keras==2.18.0
+threadpoolctl==3.5.0
 tinycss2==1.4.0
 tokenizers==0.20.3
 toml==0.10.2
