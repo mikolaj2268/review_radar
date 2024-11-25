@@ -89,19 +89,14 @@ def preprocess_data(df, model=None, min_records=100, apply_lemmatization=True, c
     # Step 2: Basic Cleanup and Null Handling
     df = df.drop_duplicates()
     df = df[(df['score'] >= 1) & (df['score'] <= 5)]
-    df = df[df['content'].notna() & (df['content'].str.len() <= 500)]
+    df = df[df['content'].str.len() <= 500]
     for col in ['content', 'app_version']:
         df[col] = df[col].fillna('')
-    df['reply_content'] = df['reply_content'].fillna('')
-    df['replied_at'] = df['replied_at'].fillna(pd.NaT)
     
     # Step 3: Date Parsing
     df['at'] = pd.to_datetime(df['at'], errors='coerce')
     df = df.dropna(subset=['at'])  # Remove rows with invalid dates
     df['date'] = df['at'].dt.date
-    
-    if 'replied_at' in df.columns:
-        df['replied_at'] = pd.to_datetime(df['replied_at'], errors='coerce')
 
     # Step 4: Normalize Text
     df['content'] = df['content'].str.lower()
@@ -133,18 +128,6 @@ def preprocess_data(df, model=None, min_records=100, apply_lemmatization=True, c
     # Step 6: Handle Small Datasets
     if len(df) < min_records:
         st.warning(f"Warning: The dataset contains only {len(df)} records. Consider collecting more data.")
-    
-    # Step 7: Tokenization and Stop Words Removal (Optional for Transformer Models)
-    if model == 'Transformers':
-        import nltk
-        from nltk.tokenize import word_tokenize
-        from nltk.corpus import stopwords
-        
-        nltk.download('punkt')
-        nltk.download('stopwords')
-        
-        stop_words = set(stopwords.words('english'))
-        df['tokens'] = df['content'].apply(lambda x: [word for word in word_tokenize(x) if word not in stop_words])
     
     return df
 
