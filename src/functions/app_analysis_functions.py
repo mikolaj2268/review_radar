@@ -156,7 +156,7 @@ def check_and_fetch_reviews(conn, selected_app, selected_app_id, start_date, end
         status_placeholder.success(f"Reviews for **{selected_app}** from {start_date} to {end_date} are up-to-date.")
     else:
         # Display missing date ranges
-        status_placeholder.warning("Data is incomplete. Fetching missing reviews...")
+        # status_placeholder.warning("Data is incomplete. Fetching missing reviews...")
         for missing_range in missing_ranges['missing']:
             missing_placeholder.info(f"- Missing: {missing_range[0]} to {missing_range[1]}")
 
