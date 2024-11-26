@@ -24,6 +24,7 @@ cycler==0.12.1
 debugpy==1.8.9
 decorator==5.1.1
 defusedxml==0.7.1
+editdistpy==0.1.5
 executing==2.1.0
 fastjsonschema==2.20.0
 filelock==3.16.1
@@ -133,6 +134,7 @@ soupsieve==2.6
 stack-data==0.6.3
 streamlit==1.40.1
 sympy==1.13.1
+symspellpy==6.7.8
 tenacity==9.0.0
 tensorboard==2.18.0
 tensorboard-data-server==0.7.2
