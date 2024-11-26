@@ -4,11 +4,14 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
+from transformers import AutoTokenizer
 from src.database_connection.db_utils import (
     get_reviews_date_ranges,
     get_reviews_for_app
 )
 from src.functions.scraper import scrape_and_store_reviews
+from symspellpy.symspellpy import SymSpell, Verbosity
+import pkg_resources
 from collections import Counter
 
 def plot_content_length_distribution(df):
@@ -50,7 +53,8 @@ def plot_score_distribution(df):
     fig.update_traces(texttemplate='%{y:.2%}', textposition='outside')
     return fig
 
-def preprocess_data(df, model=None, min_records=100, null_threshold=0.4):
+
+def preprocess_data(df, model=None, min_records=100, apply_lemmatization=True, correct_spelling=False):
     """
     Preprocess the given DataFrame for sentiment analysis and visualization.
     
@@ -58,45 +62,65 @@ def preprocess_data(df, model=None, min_records=100, null_threshold=0.4):
     df (pd.DataFrame): The input DataFrame to preprocess.
     model (str, optional): The sentiment analysis model ('VADER' or 'Transformers').
     min_records (int, optional): Minimum records required for reliable analysis.
-    null_threshold (float, optional): Maximum allowed null ratio per column before dropping it.
-    
+    apply_lemmatization (bool, optional): Whether to apply lemmatization to the text.
+    correct_spelling (bool, optional): Whether to correct spelling errors in the text.
+
     Returns:
     pd.DataFrame: The preprocessed DataFrame.
     """
-    # Step 1: Basic Cleanup
+    # Validate input
+    if df.empty:
+        raise ValueError("The input DataFrame is empty. Please provide a valid DataFrame.")
+    if model not in [None, 'VADER', 'Transformers']:
+        raise ValueError("Invalid model specified. Use 'VADER' or 'Transformers'.")
+
+    # Initialize SymSpell
+    if correct_spelling:
+        sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
+        dictionary_path = pkg_resources.resource_filename("symspellpy", "frequency_dictionary_en_82_765.txt")
+        bigram_path = pkg_resources.resource_filename("symspellpy", "frequency_bigramdictionary_en_243_342.txt")
+        sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
+        sym_spell.load_bigram_dictionary(bigram_path, term_index=0, count_index=2)
+
+    # Step 1: Drop unnecessary columns 
+    columns_to_drop = ['user_name', 'user_image', 'reply_content', 'replied_at', 'review_created_version']
+    df = df.drop(columns=[col for col in columns_to_drop if col in df.columns], errors='ignore')
+
+    # Step 2: Basic Cleanup and Null Handling
     df = df.drop_duplicates()
     df = df[(df['score'] >= 1) & (df['score'] <= 5)]
-    df = df[df['content'].notna() & (df['content'].str.len() <= 500)]
-    
-    # Step 2: Null Handling
-    for col in ['content', 'review_created_version', 'app_version']:
+    df = df[df['content'].str.len() <= 500]
+    for col in ['content', 'app_version']:
         df[col] = df[col].fillna('')
-    df['reply_content'] = df['reply_content'].fillna('')
-    df['replied_at'] = df['replied_at'].fillna(pd.NaT)
-    
-    # Drop columns with excessive nulls
-    critical_columns = ['content', 'score', 'at']
-    null_ratios = df.isnull().mean()
-    cols_to_drop = null_ratios[
-        (null_ratios > null_threshold) & (~null_ratios.index.isin(critical_columns))
-    ].index
-    df = df.drop(columns=cols_to_drop, errors='ignore')
     
     # Step 3: Date Parsing
     df['at'] = pd.to_datetime(df['at'], errors='coerce')
     df = df.dropna(subset=['at'])  # Remove rows with invalid dates
     df['date'] = df['at'].dt.date
-    
-    if 'replied_at' in df.columns:
-        df['replied_at'] = pd.to_datetime(df['replied_at'], errors='coerce')
-    
+
     # Step 4: Normalize Text
     df['content'] = df['content'].str.lower()
-    
+
+    # Step 5: Optional Cleaning and Tokenization based on Model
     if model == 'VADER':
         df['clean_content'] = df['content'].str.replace(r'[^\w\s]', '', regex=True)
+        
+    if model == 'Transformers':
+        tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")  
+        df['tokens'] = df['content'].apply(lambda x: tokenizer.tokenize(x))
+
+    # Step 6: Correct Spelling
+    if correct_spelling:
+        def correct_text(text):
+            suggestions = sym_spell.lookup_compound(text, max_edit_distance=2)
+            return suggestions[0].term if suggestions else text
+        df['content'] = df['content'].apply(correct_text)
+
+    # Step 7: Handle Small Datasets
+    if len(df) < min_records:
+        print(f"Warning: The dataset contains only {len(df)} records. Consider collecting more data.")
     
-    # Step 5: Add Features
+    # Step 8: Add Features
     df['content_length'] = df['content'].str.len()
     if 'thumbs_up_count' in df.columns:
         df['thumbs_up_count'] = df['thumbs_up_count'].clip(lower=0)
@@ -104,18 +128,6 @@ def preprocess_data(df, model=None, min_records=100, null_threshold=0.4):
     # Step 6: Handle Small Datasets
     if len(df) < min_records:
         st.warning(f"Warning: The dataset contains only {len(df)} records. Consider collecting more data.")
-    
-    # Step 7: Tokenization and Stop Words Removal (Optional for Transformer Models)
-    if model == 'Transformers':
-        import nltk
-        from nltk.tokenize import word_tokenize
-        from nltk.corpus import stopwords
-        
-        nltk.download('punkt')
-        nltk.download('stopwords')
-        
-        stop_words = set(stopwords.words('english'))
-        df['tokens'] = df['content'].apply(lambda x: [word for word in word_tokenize(x) if word not in stop_words])
     
     return df
 

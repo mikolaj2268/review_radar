@@ -1,6 +1,7 @@
 # We will test the preprocess_data function from the app_analysis_functions.py file
 import sys
 import os
+from transformers import AutoTokenizer
 
 # Dodaj ścieżkę do katalogu `src`
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
@@ -28,7 +29,7 @@ def main():
     st.dataframe(app_data)
     
     # Preprocess the data
-    preprocessed_data = preprocess_data(app_data)
+    preprocessed_data = preprocess_data(app_data, model='VADER', min_records=100, apply_lemmatization=True, correct_spelling=False)
     
     # Display the data after preprocessing
     st.write("Data after preprocessing:")
