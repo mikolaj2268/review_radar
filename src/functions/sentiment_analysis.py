@@ -1,10 +1,10 @@
 # src/functions/sentiment_analysis.py
 
 import nltk
-nltk.download('vader_lexicon')  # Dla VADER
-nltk.download('punkt')          # Dla TextBlob
-nltk.download('averaged_perceptron_tagger')  # Dodatkowo dla TextBlob
-nltk.download('wordnet')        # Dodatkowo dla TextBlob
+nltk.download('vader_lexicon')
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('wordnet')
 
 from src.models.textblob_model import analyze_sentiment_textblob
 from src.models.vader_model import analyze_sentiment_vader
