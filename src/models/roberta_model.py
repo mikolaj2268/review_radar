@@ -49,8 +49,8 @@ def analyze_sentiment_roberta(text):
         result = classifier(text)[0]
         label = LABEL_MAPPING.get(result['label'], "Unknown")
         return label
-    except Exception as e:
-        logger.error(f"Error in RoBERTa model for text: {text}\nError: {e}")
+    except (ValueError, RuntimeError) as e:
+        logger.error(f"Error processing text with RoBERTa: {e}")
         return 'Error'
 
 def analyze_roberta_batch(texts, batch_size=32):

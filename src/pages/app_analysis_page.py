@@ -100,7 +100,6 @@ def app_analysis_page():
         perform_analysis_button = st.button("Download reviews")
         stop_download_button = st.button("Stop downloading")
 
-        # Initialize session state variables
         if 'analysis_result' not in st.session_state:
             st.session_state.analysis_result = None
         if 'stop_download' not in st.session_state:
@@ -204,41 +203,29 @@ def app_analysis_page():
                 selected_model = st.radio("", model_options)
 
                 perform_analysis = st.button("Perform Analysis")
-
+                def run_sentiment_analysis(model_function, model_name):
+                    sentiments = []
+                    for text in tqdm(filtered_data['content'], desc=f"Analyzing with {model_name}"):
+                        sentiments.append(model_function(text))
+                        current_step += 1
+                        update_progress(progress_bar, status_text, current_step, total_records, f"Processing {model_name}")
+                    return sentiments
                 if perform_analysis:
                     if not filtered_data.empty:
                         total_records = len(filtered_data)
                         progress_bar, status_text = initialize_progress(total_records)
                         current_step = 0
 
-                        # Perform sentiment analysis using the selected model
-                        if selected_model == "TextBlob":
-                            sentiments = []
-                            for text in tqdm(filtered_data['content'], desc="Analyzing with TextBlob"):
-                                sentiments.append(analyze_sentiment_textblob(text))
-                                current_step += 1
-                                update_progress(progress_bar, status_text, current_step, total_records, "Processing TextBlob")
-                            filtered_data['sentiment'] = sentiments
-                        elif selected_model == "VADER":
-                            sentiments = []
-                            for text in tqdm(filtered_data['content'], desc="Analyzing with VADER"):
-                                sentiments.append(analyze_sentiment_vader(text))
-                                current_step += 1
-                                update_progress(progress_bar, status_text, current_step, total_records, "Processing VADER")
-                            filtered_data['sentiment'] = sentiments
-                        elif selected_model == "RoBERTa":
-                            sentiments = []
-                            for text in tqdm(filtered_data['content'], desc="Analyzing with RoBERTa"):
-                                sentiments.append(analyze_sentiment_roberta(text))
-                                current_step += 1
-                                update_progress(progress_bar, status_text, current_step, total_records, "Processing RoBERTa")
-                            filtered_data['sentiment'] = sentiments
-                        elif selected_model == "DistilBERT":
-                            sentiments = []
-                            for text in tqdm(filtered_data['content'], desc="Analyzing with DistilBERT"):
-                                sentiments.append(analyze_sentiment_distilbert(text))
-                                current_step += 1
-                                update_progress(progress_bar, status_text, current_step, total_records, "Processing DistilBERT")
+                        model_functions = {
+                            "TextBlob": analyze_sentiment_textblob,
+                            "VADER": analyze_sentiment_vader,
+                            "RoBERTa": analyze_sentiment_roberta,
+                            "DistilBERT": analyze_sentiment_distilbert,
+                        }
+
+                        if selected_model in model_functions:
+                            model_function = model_functions[selected_model]
+                            sentiments = run_sentiment_analysis(model_function, selected_model)
                             filtered_data['sentiment'] = sentiments
                         else:
                             st.error("Selected model is not supported.")
