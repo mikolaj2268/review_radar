@@ -10,7 +10,7 @@ from src.database_connection.db_utils import (
     get_reviews_for_app
 )
 from src.functions.scraper import scrape_and_store_reviews
-from symspellpy.symspellpy import SymSpell, Verbosity
+# from symspellpy.symspellpy import SymSpell, Verbosity
 import pkg_resources
 from collections import Counter
 
@@ -74,13 +74,13 @@ def preprocess_data(df, model=None, min_records=100, apply_lemmatization=True, c
     if model not in [None, 'VADER', 'Transformers']:
         raise ValueError("Invalid model specified. Use 'VADER' or 'Transformers'.")
 
-    # Initialize SymSpell
-    if correct_spelling:
-        sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
-        dictionary_path = pkg_resources.resource_filename("symspellpy", "frequency_dictionary_en_82_765.txt")
-        bigram_path = pkg_resources.resource_filename("symspellpy", "frequency_bigramdictionary_en_243_342.txt")
-        sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
-        sym_spell.load_bigram_dictionary(bigram_path, term_index=0, count_index=2)
+    # # Initialize SymSpell
+    # if correct_spelling:
+    #     sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
+    #     dictionary_path = pkg_resources.resource_filename("symspellpy", "frequency_dictionary_en_82_765.txt")
+    #     bigram_path = pkg_resources.resource_filename("symspellpy", "frequency_bigramdictionary_en_243_342.txt")
+    #     sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
+    #     sym_spell.load_bigram_dictionary(bigram_path, term_index=0, count_index=2)
 
     # Step 1: Drop unnecessary columns 
     columns_to_drop = ['c_name', 'user_image', 'reply_content', 'replied_at', 'review_created_version']
@@ -165,7 +165,7 @@ def check_and_fetch_reviews(conn, selected_app, selected_app_id, start_date, end
         status_placeholder.success(f"Reviews for **{selected_app}** from {start_date} to {end_date} are up-to-date.")
     else:
         # Display missing date ranges
-        status_placeholder.warning("Data is incomplete. Fetching missing reviews...")
+        # status_placeholder.warning("Data is incomplete. Fetching missing reviews...")
         for missing_range in missing_ranges['missing']:
             missing_placeholder.info(f"- Missing: {missing_range[0]} to {missing_range[1]}")
 
