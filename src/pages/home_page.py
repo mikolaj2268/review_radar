@@ -49,7 +49,7 @@ def home_page():
 
     with right_col:
         # Add logo or main image
-        img = Image.open("assets/logo/WordCloud2.png") 
+        img = Image.open("assets/images/WordCloud2.png") 
         st.image(img, width=650)
 
     with left_col:
@@ -100,7 +100,7 @@ def home_page():
         )
 
     with right_col:
-        st.image("assets/logo/Usage_diagram.png", width=800)
+        st.image("assets/images/Usage_diagram.png", width=800)
 
     st.markdown("---")
 

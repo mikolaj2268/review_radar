@@ -22,7 +22,7 @@ def main():
     )
 
     # Insert logo at the top of the sidebar
-    logo_path = "assets/logo/1-rm-bg-white.png"  # Adjust to the path of your logo file
+    logo_path = "assets/images/1-rm-bg-white.png"  # Adjust to the path of your logo file
     st.sidebar.image(logo_path, use_container_width=True)
 
     selection = st.sidebar.selectbox(

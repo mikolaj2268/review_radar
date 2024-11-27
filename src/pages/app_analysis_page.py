@@ -203,7 +203,7 @@ def app_analysis_page():
                 selected_model = st.radio("", model_options)
 
                 perform_analysis = st.button("Perform Analysis")
-                def run_sentiment_analysis(model_function, model_name):
+                def run_sentiment_analysis(model_function, model_name, current_step=0):
                     sentiments = []
                     for text in tqdm(filtered_data['content'], desc=f"Analyzing with {model_name}"):
                         sentiments.append(model_function(text))
@@ -225,7 +225,7 @@ def app_analysis_page():
 
                         if selected_model in model_functions:
                             model_function = model_functions[selected_model]
-                            sentiments = run_sentiment_analysis(model_function, selected_model)
+                            sentiments = run_sentiment_analysis(model_function, selected_model, current_step=current_step)
                             filtered_data['sentiment'] = sentiments
                         else:
                             st.error("Selected model is not supported.")

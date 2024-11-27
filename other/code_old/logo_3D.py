@@ -3,7 +3,7 @@ import streamlit as st
 import base64
 
 # Path to the logo
-logo_path = "assets/logo/logo.png"
+logo_path = "assets/images/logo.png"
 
 # Utility function for glowing HTML
 def glowing_logo_html(image_url):
