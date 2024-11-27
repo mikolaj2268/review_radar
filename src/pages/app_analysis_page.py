@@ -27,6 +27,7 @@ from src.database_connection.db_utils import get_app_data
 from src.models.textblob_model import analyze_sentiment_textblob
 from src.models.vader_model import analyze_sentiment_vader
 from src.models.roberta_model import analyze_sentiment_roberta
+from src.models.distilbert_model import analyze_sentiment_distilbert
 
 
 # Configure progress bar
@@ -199,8 +200,8 @@ def app_analysis_page():
 
                 # Model selection and perform analysis button
                 st.write("### Select Sentiment Analysis Model")
-                model_options = ["TextBlob", "VADER", "RoBERTa"]
-                selected_model = st.radio("Choose a sentiment analysis model:", model_options)
+                model_options = ["TextBlob", "VADER", "DistilBERT", "RoBERTa" ]
+                selected_model = st.radio("", model_options)
 
                 perform_analysis = st.button("Perform Analysis")
 
@@ -231,6 +232,13 @@ def app_analysis_page():
                                 sentiments.append(analyze_sentiment_roberta(text))
                                 current_step += 1
                                 update_progress(progress_bar, status_text, current_step, total_records, "Processing RoBERTa")
+                            filtered_data['sentiment'] = sentiments
+                        elif selected_model == "DistilBERT":
+                            sentiments = []
+                            for text in tqdm(filtered_data['content'], desc="Analyzing with DistilBERT"):
+                                sentiments.append(analyze_sentiment_distilbert(text))
+                                current_step += 1
+                                update_progress(progress_bar, status_text, current_step, total_records, "Processing DistilBERT")
                             filtered_data['sentiment'] = sentiments
                         else:
                             st.error("Selected model is not supported.")
