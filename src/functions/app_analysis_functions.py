@@ -20,9 +20,6 @@ def plot_content_length_distribution(df):
     
     Parameters:
     df (pd.DataFrame): The input DataFrame containing the reviews.
-    
-    Returns:
-    plotly.graph_objs._figure.Figure: The Plotly figure object.
     """
     fig = px.histogram(df, x='content_length', nbins=30, title='Distribution of Content Length')
     fig.update_layout(xaxis_title='Content Length', yaxis_title='Count')
@@ -34,9 +31,6 @@ def plot_score_distribution(df):
     
     Parameters:
     df (pd.DataFrame): The input DataFrame containing the reviews.
-    
-    Returns:
-    plotly.graph_objs._figure.Figure: The Plotly figure object.
     """
     fig = px.histogram(
         df, 
