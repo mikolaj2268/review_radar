@@ -83,7 +83,7 @@ def preprocess_data(df, model=None, min_records=100, apply_lemmatization=True, c
         sym_spell.load_bigram_dictionary(bigram_path, term_index=0, count_index=2)
 
     # Step 1: Drop unnecessary columns 
-    columns_to_drop = ['user_name', 'user_image', 'reply_content', 'replied_at', 'review_created_version']
+    columns_to_drop = ['c_name', 'user_image', 'reply_content', 'replied_at', 'review_created_version']
     df = df.drop(columns=[col for col in columns_to_drop if col in df.columns], errors='ignore')
 
     # Step 2: Basic Cleanup and Null Handling
@@ -125,9 +125,6 @@ def preprocess_data(df, model=None, min_records=100, apply_lemmatization=True, c
     if 'thumbs_up_count' in df.columns:
         df['thumbs_up_count'] = df['thumbs_up_count'].clip(lower=0)
     
-    # Step 6: Handle Small Datasets
-    if len(df) < min_records:
-        st.warning(f"Warning: The dataset contains only {len(df)} records. Consider collecting more data.")
     
     return df
 
