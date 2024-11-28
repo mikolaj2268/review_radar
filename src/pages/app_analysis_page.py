@@ -3,6 +3,7 @@
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+from streamlit_plotly_events import plotly_events
 from datetime import datetime, timedelta
 from collections import Counter
 import torch
@@ -238,15 +239,72 @@ def app_analysis_page():
                         st.write("### Sentiment Analysis Results")
                         st.dataframe(filtered_data[['content', 'sentiment']])
 
-                        # Plot sentiment distribution
-                        sentiment_counts = filtered_data['sentiment'].value_counts()
-                        fig = px.bar(
-                            sentiment_counts,
-                            x=sentiment_counts.index,
-                            y=sentiment_counts.values,
-                            labels={'x': 'Sentiment', 'y': 'Count'},
-                            title='Sentiment Distribution'
+                        # Prepare sentiment counts in the desired order
+                        sentiment_counts = (
+                            filtered_data['sentiment']
+                            .value_counts()
+                            .reindex(['Negative', 'Neutral', 'Positive'])
+                            .fillna(0)
                         )
+                        
+                        # Create a DataFrame for plotting
+                        sentiment_counts_df = sentiment_counts.reset_index()
+                        sentiment_counts_df.columns = ['Sentiment', 'Count']
+                        
+                        # Define custom colors for each sentiment
+                        color_mapping = {'Negative': 'red', 'Neutral': 'blue', 'Positive': 'green'}
+                        colors = [color_mapping[sentiment] for sentiment in sentiment_counts_df['Sentiment']]
+                        
+                        # Import Plotly graph objects for advanced plotting
+                        import plotly.graph_objects as go
+                        
+                        # Create a stacked horizontal bar chart
+                        fig = go.Figure()
+                        
+                        # Add the 'Negative' sentiment segment to the bar
+                        fig.add_trace(go.Bar(
+                            x=[sentiment_counts_df.loc[sentiment_counts_df['Sentiment'] == 'Negative', 'Count'].values[0]],
+                            y=[''],  # Single bar
+                            name='Negative',
+                            orientation='h',
+                            marker=dict(color='red'),
+                            text=[f"Negative: {int(sentiment_counts_df.loc[sentiment_counts_df['Sentiment'] == 'Negative', 'Count'].values[0])}"],
+                            textposition='inside'
+                        ))
+                        
+                        # Add the 'Neutral' sentiment segment to the bar
+                        fig.add_trace(go.Bar(
+                            x=[sentiment_counts_df.loc[sentiment_counts_df['Sentiment'] == 'Neutral', 'Count'].values[0]],
+                            y=[''],  # Single bar
+                            name='Neutral',
+                            orientation='h',
+                            marker=dict(color='blue'),
+                            text=[f"Neutral: {int(sentiment_counts_df.loc[sentiment_counts_df['Sentiment'] == 'Neutral', 'Count'].values[0])}"],
+                            textposition='inside'
+                        ))
+                        
+                        # Add the 'Positive' sentiment segment to the bar
+                        fig.add_trace(go.Bar(
+                            x=[sentiment_counts_df.loc[sentiment_counts_df['Sentiment'] == 'Positive', 'Count'].values[0]],
+                            y=[''],  # Single bar
+                            name='Positive',
+                            orientation='h',
+                            marker=dict(color='green'),
+                            text=[f"Positive: {int(sentiment_counts_df.loc[sentiment_counts_df['Sentiment'] == 'Positive', 'Count'].values[0])}"],
+                            textposition='inside'
+                        ))
+                        
+                        # Update layout to stack the bars and format the chart
+                        fig.update_layout(
+                            barmode='stack',
+                            title='Sentiment Distribution',
+                            xaxis_title='Count',
+                            yaxis=dict(showticklabels=False),  # Hide y-axis labels
+                            showlegend=False,
+                            plot_bgcolor='white'
+                        )
+                        
+                        # Display the chart in Streamlit
                         st.plotly_chart(fig)
                     else:
                         st.write("No data available for the selected filters.")
