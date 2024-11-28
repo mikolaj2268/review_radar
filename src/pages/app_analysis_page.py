@@ -201,7 +201,7 @@ def app_analysis_page():
                 # Model selection and perform analysis button
                 st.write("### Select Sentiment Analysis Model")
                 model_options = ["TextBlob", "VADER", "DistilBERT", "RoBERTa" ]
-                selected_model = st.radio("", model_options)
+                selected_model = st.radio("Available models:", model_options)
 
                 perform_analysis = st.button("Perform Analysis")
                 def run_sentiment_analysis(model_function, model_name, current_step=0):
@@ -251,60 +251,52 @@ def app_analysis_page():
                         sentiment_counts_df = sentiment_counts.reset_index()
                         sentiment_counts_df.columns = ['Sentiment', 'Count']
                         
-                        # Define custom colors for each sentiment
-                        color_mapping = {'Negative': 'red', 'Neutral': 'blue', 'Positive': 'green'}
-                        colors = [color_mapping[sentiment] for sentiment in sentiment_counts_df['Sentiment']]
+                        color_mapping = {'Negative': '#E57373', 'Neutral': '#64B5F6', 'Positive': '#81C784'}
+
                         
-                        # Import Plotly graph objects for advanced plotting
+                        # Import Plotly graph objects
                         import plotly.graph_objects as go
                         
                         # Create a stacked horizontal bar chart
                         fig = go.Figure()
                         
-                        # Add the 'Negative' sentiment segment to the bar
-                        fig.add_trace(go.Bar(
-                            x=[sentiment_counts_df.loc[sentiment_counts_df['Sentiment'] == 'Negative', 'Count'].values[0]],
-                            y=[''],  # Single bar
-                            name='Negative',
-                            orientation='h',
-                            marker=dict(color='red'),
-                            text=[f"Negative: {int(sentiment_counts_df.loc[sentiment_counts_df['Sentiment'] == 'Negative', 'Count'].values[0])}"],
-                            textposition='inside',
-                            insidetextanchor='middle'
-                        ))
-                        
-                        # Add the 'Neutral' sentiment segment to the bar
-                        fig.add_trace(go.Bar(
-                            x=[sentiment_counts_df.loc[sentiment_counts_df['Sentiment'] == 'Neutral', 'Count'].values[0]],
-                            y=[''],  # Single bar
-                            name='Neutral',
-                            orientation='h',
-                            marker=dict(color='blue'),
-                            text=[f"Neutral: {int(sentiment_counts_df.loc[sentiment_counts_df['Sentiment'] == 'Neutral', 'Count'].values[0])}"],
-                            textposition='inside',
-                            insidetextanchor='middle'
-                        ))
-                        
-                        # Add the 'Positive' sentiment segment to the bar
-                        fig.add_trace(go.Bar(
-                            x=[sentiment_counts_df.loc[sentiment_counts_df['Sentiment'] == 'Positive', 'Count'].values[0]],
-                            y=[''],  # Single bar
-                            name='Positive',
-                            orientation='h',
-                            marker=dict(color='green'),
-                            text=[f"Positive: {int(sentiment_counts_df.loc[sentiment_counts_df['Sentiment'] == 'Positive', 'Count'].values[0])}"],
-                            textposition='inside',
-                            insidetextanchor='middle'
-                        ))
+                        # Iterate through each sentiment and add a bar segment
+                        for sentiment, color in color_mapping.items():
+                            count = int(sentiment_counts_df.loc[sentiment_counts_df['Sentiment'] == sentiment, 'Count'].values[0])
+                            fig.add_trace(go.Bar(
+                                x=[count],
+                                y=['Sentiments'],  # Single bar
+                                name=sentiment,
+                                orientation='h',
+                                marker=dict(color=color),
+                                text=[f"{sentiment}: {count}"],  # Updated label
+                                textposition='inside',
+                                insidetextanchor='middle'
+                            ))
                         
                         # Update layout to stack the bars and format the chart
                         fig.update_layout(
                             barmode='stack',
                             title='Sentiment Distribution',
-                            yaxis=dict(showticklabels=False),  # Hide y-axis labels
-                            xaxis=dict(showticklabels=False),  # Hide x-axis labels
+                            xaxis=dict(
+                                showticklabels=False,      # Hide x-axis tick labels
+                                showgrid=False,           # Optional: Hide x-axis grid lines
+                                zeroline=False            # Optional: Hide x-axis zero line
+                            ),
+                            yaxis=dict(
+                                showticklabels=False  # Hide y-axis labels
+                            ),
                             showlegend=False,
                             plot_bgcolor='white',
+                            
+                            annotations=[
+                                dict(
+                                    text="",
+                                    showarrow=False,
+                                    xref="paper",
+                                    yref="paper"
+                                )
+                            ]
                         )
                         
                         # Display the chart in Streamlit
