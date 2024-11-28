@@ -269,7 +269,8 @@ def app_analysis_page():
                             orientation='h',
                             marker=dict(color='red'),
                             text=[f"Negative: {int(sentiment_counts_df.loc[sentiment_counts_df['Sentiment'] == 'Negative', 'Count'].values[0])}"],
-                            textposition='inside'
+                            textposition='inside',
+                            insidetextanchor='middle'
                         ))
                         
                         # Add the 'Neutral' sentiment segment to the bar
@@ -280,7 +281,8 @@ def app_analysis_page():
                             orientation='h',
                             marker=dict(color='blue'),
                             text=[f"Neutral: {int(sentiment_counts_df.loc[sentiment_counts_df['Sentiment'] == 'Neutral', 'Count'].values[0])}"],
-                            textposition='inside'
+                            textposition='inside',
+                            insidetextanchor='middle'
                         ))
                         
                         # Add the 'Positive' sentiment segment to the bar
@@ -291,17 +293,18 @@ def app_analysis_page():
                             orientation='h',
                             marker=dict(color='green'),
                             text=[f"Positive: {int(sentiment_counts_df.loc[sentiment_counts_df['Sentiment'] == 'Positive', 'Count'].values[0])}"],
-                            textposition='inside'
+                            textposition='inside',
+                            insidetextanchor='middle'
                         ))
                         
                         # Update layout to stack the bars and format the chart
                         fig.update_layout(
                             barmode='stack',
                             title='Sentiment Distribution',
-                            xaxis_title='Count',
                             yaxis=dict(showticklabels=False),  # Hide y-axis labels
+                            xaxis=dict(showticklabels=False),  # Hide x-axis labels
                             showlegend=False,
-                            plot_bgcolor='white'
+                            plot_bgcolor='white',
                         )
                         
                         # Display the chart in Streamlit
