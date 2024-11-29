@@ -3,7 +3,7 @@
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-from streamlit_plotly_events import plotly_events
+#from streamlit_plotly_events import plotly_events
 from datetime import datetime, timedelta
 from collections import Counter
 import torch
@@ -20,7 +20,8 @@ from src.functions.app_analysis_functions import (
     check_and_fetch_reviews,
     display_reviews,
     preprocess_data,
-    plot_score_distribution
+    plot_score_distribution,
+    generate_ngrams
 )
 from src.database_connection.db_utils import get_app_data
 
@@ -340,6 +341,44 @@ def app_analysis_page():
                 st.write("No common problems identified based on the selected filters.")
         else:
             st.write("No data available for problem identification based on the selected filters.")
+        # Check if filtered_data is available and not empty
+        if 'filtered_data' in locals() and not filtered_data.empty:
+            st.header("Most Frequent Words and Phrases")
+
+            # Select n-grams length
+            ngram_length = st.selectbox("Select phrase length:", [1, 2, 3, 4], index=0)
+
+            # Combine all content into a single string
+            combined_text = ' '.join(filtered_data['content'].dropna().tolist()).lower()
+
+            # Generate n-grams
+            ngrams = generate_ngrams(combined_text, ngram_length)
+            ngram_counts = Counter(ngrams)
+            ngram_df = pd.DataFrame(ngram_counts.items(), columns=['Phrase', 'Count']).sort_values(by='Count', ascending=False)
+
+            if not ngram_df.empty:
+                # Show top 10 phrases
+                st.write(f"### Most Common {ngram_length}-Word Phrases")
+                st.dataframe(ngram_df.head(10).reset_index(drop=True), use_container_width=True)  # Full-width table
+
+                # Plot frequency of top 10 n-grams
+                fig = px.bar(ngram_df.head(10), x='Phrase', y='Count', title=f'Top 10 Most Common {ngram_length}-Word Phrases')
+                st.plotly_chart(fig)
+
+                # Select a phrase from the top 10
+                selected_phrase = st.selectbox("Select a phrase to view related comments:", ngram_df['Phrase'].head(10).tolist())
+
+                # Display related comments
+                if selected_phrase:
+                    st.write(f"Comments containing the phrase: **{selected_phrase}**")
+                    related_comments = filtered_data[
+                        filtered_data['content'].str.contains(selected_phrase, case=False, na=False)
+                    ]
+                    st.dataframe(related_comments[['content']].reset_index(drop=True), use_container_width=True)  # Full-width table
+            else:
+                st.write(f"No {ngram_length}-word phrases found.")
+        else:
+            st.write("No data available for word and phrase analysis.")
 
     # Close the database connection
     conn.close()

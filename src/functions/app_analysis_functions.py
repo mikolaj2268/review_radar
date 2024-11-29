@@ -14,6 +14,11 @@ from src.functions.scraper import scrape_and_store_reviews
 import pkg_resources
 from collections import Counter
 
+def generate_ngrams(text, n):
+    words = text.split()
+    ngrams = zip(*[words[i:] for i in range(n)])
+    return [' '.join(ngram) for ngram in ngrams]
+
 def plot_content_length_distribution(df):
     """
     Plot the distribution of content length.
