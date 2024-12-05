@@ -12,6 +12,8 @@ import tensorflow as tf
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
 import os
 from tqdm import tqdm
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
 
 from src.functions.app_analysis_functions import (
     get_db_connection,
@@ -320,6 +322,17 @@ def app_analysis_page():
 
     with tabs[3]:
         st.header("Problems Identification")
+        # Generate and display word cloud
+        if 'filtered_data' in locals() and not filtered_data.empty:
+            combined_text = ' '.join(filtered_data['content'].dropna().tolist()).lower()
+            wordcloud = WordCloud(width=800, height=400, background_color='white').generate(combined_text)
+
+            # Display the word cloud using matplotlib
+            fig, ax = plt.subplots(figsize=(10, 5))
+            ax.imshow(wordcloud, interpolation='bilinear')
+            ax.axis('off')
+            st.pyplot(fig)
+
         # Identify common problems based on keywords
         if 'filtered_data' in locals() and not filtered_data.empty:
             keywords = ["crash", "bug", "error", "slow", "freeze", "issue"]
