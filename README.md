@@ -52,7 +52,7 @@
 
 ### Prerequisites
 
-- Python 3.9 or higher
+- Python 3.12 or higher
 - Git
 
 ### Steps
