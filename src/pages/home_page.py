@@ -35,11 +35,13 @@ def home_page():
         for link_text, link_url in database_link_dict.items():
             create_st_button(link_text, link_url, st_col=st.sidebar)
 
-        st.markdown("## Software-Related Links")
+        st.markdown("## Models used to analyze sentiment")
+        # Removed Pandas and NumPy, added model links
         software_link_dict = {
-            "Pandas": "https://pandas.pydata.org",
-            "NumPy": "https://numpy.org",
-            "Streamlit": "https://streamlit.io",
+            "TextBlob": "https://textblob.readthedocs.io/en/dev/",
+            "VADER Sentiment": "https://github.com/cjhutto/vaderSentiment",
+            "DistilBERT Model": "https://huggingface.co/distilbert/distilbert-base-uncased-finetuned-sst-2-english",
+            "RoBERTa Model": "https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment-latest?text=Covid+cases+are+increasing+fast%21"
         }
         for link_text, link_url in software_link_dict.items():
             create_st_button(link_text, link_url, st_col=st.sidebar)
@@ -86,14 +88,14 @@ def home_page():
     # Section: Usage
     st.markdown("## Usage: 4 Easy Steps to Improve Your App")
 
-# Create two columns
+    # Create two columns for usage section
     left_col, right_col = st.columns([3, 1])
 
     with left_col:
         st.markdown(
             """
-            1. **Go to App Analysis and Search Your App**: Navigate to the section and Enter the name of the app.
-            2. **Choose Date Range and Download the Data**: specify the date range and click "Download Reviews".
+            1. **Go to App Analysis and Search Your App**: Navigate to the section and enter the name of the app.
+            2. **Choose Date Range and Download the Data**: Specify the date range and click "Download Reviews".
             3. **Analyze the Reviews**: Dive into user feedback to understand their needs.
             4. **Improve Your App**: Use these insights to enhance your app and delight your customers!
             """
@@ -127,15 +129,7 @@ def home_page():
         """
     )
 
-    st.markdown("---")
 
-    st.markdown(
-        """
-        ## Acknowledgments
-        - Google Play API
-        - Open Source Libraries: Pandas, NumPy, Streamlit, Matplotlib
-        """
-    )
 
 
 if __name__ == "__main__":
