@@ -5,12 +5,19 @@ from textblob import TextBlob
 def analyze_sentiment_textblob(text):
     try:
         analysis = TextBlob(text)
-        polarity = analysis.sentiment.polarity
+        polarity = float(analysis.sentiment.polarity)
         if polarity > 0:
-            return 'Positive'
+            label = 'Positive'
         elif polarity == 0:
-            return 'Neutral'
+            label = 'Neutral'
         else:
-            return 'Negative'
+            label = 'Negative'
+        return {
+            'textblob_sentiment_label': label,
+            'textblob_polarity': polarity
+        }
     except Exception:
-        return 'Error'
+        return {
+            'textblob_sentiment_label': 'Error',
+            'textblob_polarity': None
+        }
