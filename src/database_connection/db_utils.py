@@ -38,6 +38,7 @@ def create_reviews_table(conn):
     cursor.close()
 
 def get_reviews_date_ranges(conn, app_name):
+    """Fetches distinct review dates for a specific app."""
     cursor = conn.cursor()
     cursor.execute('''
         SELECT DISTINCT date(at) as review_date FROM app_reviews WHERE app_name = ?
@@ -83,3 +84,33 @@ def get_app_data(conn, app_name, start_date=None, end_date=None):
     query += " ORDER BY at DESC;"
     reviews_df = pd.read_sql_query(query, conn, params=params)
     return reviews_df
+
+def insert_reviews(conn, reviews_df):
+    """Insert reviews into the database, ignoring duplicates based on review_id."""
+    cursor = conn.cursor()
+    insert_query = '''
+        INSERT OR IGNORE INTO app_reviews (
+            review_id, user_name, user_image, content, score, thumbs_up_count,
+            review_created_version, at, reply_content, replied_at, app_version,
+            app_name, country, language
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+    '''
+    for _, row in reviews_df.iterrows():
+        cursor.execute(insert_query, (
+            row['review_id'],
+            row['user_name'],
+            row['user_image'],
+            row['content'],
+            row['score'],
+            row['thumbs_up_count'],
+            row['review_created_version'],
+            row['at'].isoformat(),
+            row['reply_content'],
+            row['replied_at'].isoformat() if row['replied_at'] else None,
+            row['app_version'],
+            row['app_name'],
+            row['country'],
+            row['language']
+        ))
+    conn.commit()
+    cursor.close()
