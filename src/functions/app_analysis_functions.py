@@ -11,7 +11,7 @@ from src.database_connection.db_utils import (
 )
 from src.functions.scraper import scrape_and_store_reviews
 # from symspellpy.symspellpy import SymSpell, Verbosity
-import pkg_resources
+# import pkg_resources
 from collections import Counter
 
 def generate_ngrams(text, n):
