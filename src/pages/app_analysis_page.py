@@ -69,11 +69,18 @@ def app_analysis_page():
             if selected_app_option:
                 selected_index = app_options.index(selected_app_option)
                 chosen_app = search_results[selected_index]
-                selected_app = chosen_app['title']
-                selected_app_id = chosen_app['appId']
+                
+                # Safely access dictionary keys with defaults
+                selected_app = chosen_app.get('title', 'Unknown App')
+                selected_app_id = chosen_app.get('appId', None)
                 selected_app_icon = chosen_app.get('icon', None)
+                
+                if not selected_app_id:
+                    st.sidebar.error("Selected app does not have a valid App ID.")
+                    selected_app = None
+                    selected_app_id = None
         else:
-            st.sidebar.write(f"No apps found matching '{search_query}'.")
+            st.sidebar.write(f"No apps found matching '{search_query}'. Please try a different name.")
     else:
         st.sidebar.write("Please enter an application name to search.")
 

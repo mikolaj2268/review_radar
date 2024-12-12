@@ -10,7 +10,24 @@ def select_app(app_name):
     """Searches for apps matching the input name and returns a list of options."""
     try:
         search_results = search(app_name, n_hits=5, lang='en', country='us')
+        
+        # Ensure search_results is a list
+        if not isinstance(search_results, list):
+            st.error(f"Unexpected response format when searching for '{app_name}'.")
+            return []
+        
+        # Filter out any None entries
+        search_results = [app for app in search_results if app is not None]
+        
+        if not search_results:
+            st.warning(f"No apps found matching '{app_name}'. Please try a different name.")
+        
         return search_results
+    
+    except Exception as e:
+        st.error(f"Error searching for app '{app_name}': {e}")
+        return []
+    
     except Exception as e:
         st.error(f"Error searching for app '{app_name}': {e}")
         return []
@@ -64,8 +81,11 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
 
         # Check if no reviews are in the desired date range
         if not new_reviews_in_range:
-            # If the oldest review in the batch is older than start_date, we can stop
-            if new_reviews[-1]['at'] < start_date:
+            # Check if new_reviews is non-empty before accessing
+            if new_reviews and new_reviews[-1]['at'] < start_date:
+                break
+            elif not new_reviews:
+                # If new_reviews is empty, no more reviews to fetch
                 break
             else:
                 # Continue to next batch
