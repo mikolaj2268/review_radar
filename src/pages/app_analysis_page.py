@@ -352,62 +352,99 @@ def app_analysis_page():
 
     with tabs[3]:
         st.header("Problems Identification")
-        # Generate and display word cloud
-        if 'filtered_data' in locals() and not filtered_data.empty:
-            combined_text = ' '.join(filtered_data['content'].dropna().tolist()).lower()
-            wordcloud = WordCloud(width=800, height=400, background_color='white').generate(combined_text)
 
-            # Display the word cloud using matplotlib
-            fig, ax = plt.subplots(figsize=(10, 5))
-            ax.imshow(wordcloud, interpolation='bilinear')
-            ax.axis('off')
-            st.pyplot(fig)
+        import re
 
-        # Identify common problems based on keywords
-        if 'filtered_data' in locals() and not filtered_data.empty:
-            keywords = ["crash", "bug", "error", "slow", "freeze", "issue"]
-            filtered_data['issues'] = filtered_data['content'].apply(
-                lambda x: ', '.join([kw for kw in keywords if kw in x.lower()])
-            )
-            issues = filtered_data['issues'].dropna().tolist()
-            issue_counts = Counter(', '.join(issues).split(', '))
-            issue_df = pd.DataFrame(issue_counts.items(), columns=['Issue', 'Count']).sort_values(by='Count', ascending=False)
+        def preprocess_text_simple(text):
+            # Define a basic list of stop words
+            stop_words = {"a", "the", "and", "is", "in", "to", "of", "it", "for", "on", "this", "with", "at", "by", "an", "be", "are"}
 
-            if not issue_df.empty:
-                st.write("### Common Problems Identified")
-                st.dataframe(issue_df)
+            # Convert to lowercase, remove non-alphanumeric characters, and repetitive sequences
+            text = re.sub(r'(\b\w+\b)(?:\s+\1)+', r'\1', text.lower())  # Remove repetitions
+            text = re.sub(r'[^a-zA-Z0-9\s]', '', text)  # Remove special characters
 
-                fig = px.bar(issue_df, x='Issue', y='Count', title='Common Problems in App Reviews')
-                st.plotly_chart(fig)
+            # Split into words and remove stop words
+            words = text.split()
+            filtered_words = [word for word in words if word not in stop_words]
+
+            return ' '.join(filtered_words)
+
+        # Ensure the data is properly filtered as in Tab 1
+        if 'analysis_data' in st.session_state and st.session_state['analysis_data'] is not None:
+            analyzed_data = st.session_state['analysis_data']
+            analyzed_date_range = st.session_state['analyzed_date_range']
+
+            if selected_date_range[0] >= analyzed_date_range[0] and selected_date_range[1] <= analyzed_date_range[1]:
+                final_filtered_data = analyzed_data[
+                    (analyzed_data['at'] >= selected_date_range[0]) &
+                    (analyzed_data['at'] <= selected_date_range[1]) &
+                    (analyzed_data['score'].isin(selected_scores))
+                ]
             else:
-                st.write("No common problems identified based on the selected filters.")
+                st.warning("You've selected a broader date range than previously analyzed. Please re-run the analysis.")
+                final_filtered_data = None
 
-            st.header("Most Frequent Words and Phrases")
-            ngram_length = st.selectbox("Select phrase length:", [1, 2, 3, 4], index=0)
+            if final_filtered_data is not None and not final_filtered_data.empty:
+                # Preprocess text data
+                combined_text = ' '.join(final_filtered_data['content'].dropna().tolist()).lower()
+                cleaned_text = preprocess_text_simple(combined_text)
 
-            combined_text = ' '.join(filtered_data['content'].dropna().tolist()).lower()
-            ngrams = generate_ngrams(combined_text, ngram_length)
-            ngram_counts = Counter(ngrams)
-            ngram_df = pd.DataFrame(ngram_counts.items(), columns=['Phrase', 'Count']).sort_values(by='Count', ascending=False)
+                # Generate and display word cloud
+                wordcloud = WordCloud(width=800, height=400, background_color='white').generate(cleaned_text)
 
-            if not ngram_df.empty:
-                st.write(f"### Most Common {ngram_length}-Word Phrases")
-                st.dataframe(ngram_df.head(10).reset_index(drop=True), use_container_width=True)
+                # Display the word cloud using matplotlib
+                fig, ax = plt.subplots(figsize=(10, 5))
+                ax.imshow(wordcloud, interpolation='bilinear')
+                ax.axis('off')
+                st.pyplot(fig)
 
-                fig = px.bar(ngram_df.head(10), x='Phrase', y='Count', title=f'Top 10 Most Common {ngram_length}-Word Phrases')
-                st.plotly_chart(fig)
+                # Identify common problems based on keywords
+                keywords = ["crash", "bug", "error", "slow", "freeze", "issue"]
+                final_filtered_data['issues'] = final_filtered_data['content'].apply(
+                    lambda x: ', '.join([kw for kw in keywords if kw in x.lower()])
+                )
+                issues = final_filtered_data['issues'].dropna().tolist()
+                issue_counts = Counter(', '.join(issues).split(', '))
+                issue_df = pd.DataFrame(issue_counts.items(), columns=['Issue', 'Count']).sort_values(by='Count', ascending=False)
 
-                selected_phrase = st.selectbox("Select a phrase to view related comments:", ngram_df['Phrase'].head(10).tolist())
+                if not issue_df.empty:
+                    st.write("### Common Problems Identified")
+                    st.dataframe(issue_df, use_container_width=True)
 
-                if selected_phrase:
-                    st.write(f"Comments containing the phrase: **{selected_phrase}**")
-                    related_comments = filtered_data[
-                        filtered_data['content'].str.contains(selected_phrase, case=False, na=False)
-                    ]
-                    st.dataframe(related_comments[['content']].reset_index(drop=True), use_container_width=True)
+                    fig = px.bar(issue_df, x='Issue', y='Count', title='Common Problems in App Reviews')
+                    st.plotly_chart(fig)
+                else:
+                    st.write("No common problems identified based on the selected filters.")
+
+                # Generate and display most frequent words and phrases
+                st.header("Most Frequent Words and Phrases")
+                ngram_length = st.selectbox("Select phrase length:", [1, 2, 3, 4], index=0)
+
+                ngrams = generate_ngrams(cleaned_text, ngram_length)
+                ngram_counts = Counter(ngrams)
+                ngram_df = pd.DataFrame(ngram_counts.items(), columns=['Phrase', 'Count']).sort_values(by='Count', ascending=False)
+
+                if not ngram_df.empty:
+                    st.write(f"### Most Common {ngram_length}-Word Phrases")
+                    st.dataframe(ngram_df.head(10).reset_index(drop=True), use_container_width=True)
+
+                    fig = px.bar(ngram_df.head(10), x='Phrase', y='Count', title=f'Top 10 Most Common {ngram_length}-Word Phrases')
+                    st.plotly_chart(fig)
+
+                    selected_phrase = st.selectbox("Select a phrase to view related comments:", ngram_df['Phrase'].head(10).tolist())
+
+                    if selected_phrase:
+                        st.write(f"Comments containing the phrase: **{selected_phrase}**")
+                        related_comments = final_filtered_data[
+                            final_filtered_data['content'].str.contains(selected_phrase, case=False, na=False)
+                        ]
+                        st.dataframe(related_comments[['content']].reset_index(drop=True), use_container_width=True)
+                else:
+                    st.write(f"No {ngram_length}-word phrases found.")
             else:
-                st.write(f"No {ngram_length}-word phrases found.")
+                st.write("No data available after applying these filters. Please perform analysis first.")
         else:
             st.write("No data available. Perform analysis first.")
+
 
     conn.close()
