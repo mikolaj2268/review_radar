@@ -33,6 +33,7 @@ from src.models.textblob_model import analyze_sentiment_textblob
 from src.models.vader_model import analyze_sentiment_vader
 from src.models.roberta_model import analyze_sentiment_roberta
 from src.models.distilbert_model import analyze_sentiment_distilbert
+from matplotlib.colors import LinearSegmentedColormap
 
 
 def initialize_progress(total_steps):
@@ -426,7 +427,7 @@ def app_analysis_page():
 
     with tabs[3]:
         st.header("Problems Identification")
-
+        
         if 'analysis_data' in st.session_state and st.session_state['analysis_data'] is not None:
             analyzed_data = st.session_state['analysis_data']
             analyzed_date_range = st.session_state['analyzed_date_range']
@@ -446,32 +447,36 @@ def app_analysis_page():
                 combined_text = ' '.join(final_filtered_data['content'].dropna().tolist())
                 cleaned_text = preprocess_text_simple(combined_text)
 
-                # Generate and display word cloud
-                wordcloud = WordCloud(width=800, height=400, background_color='white').generate(cleaned_text)
+                # User input for problem identification
+                problem_keyword = st.text_input("Enter a keyword to identify problems (e.g., 'bug')")
 
-                fig, ax = plt.subplots(figsize=(10, 5))
-                ax.imshow(wordcloud, interpolation='bilinear')
-                ax.axis('off')
-                st.pyplot(fig)
+                if problem_keyword:
+                    # Filter comments containing the exact keyword
+                    keyword_comments = final_filtered_data[
+                        final_filtered_data['content'].str.contains(rf'\b{problem_keyword}\b', case=False, na=False)
+                    ]
 
-                # Identify common problems based on sorted n-grams
-                keywords = ["crash", "bug", "error", "slow", "freeze", "issue"]  # Example keywords
-                final_filtered_data['issues'] = final_filtered_data['content'].apply(
-                    lambda x: ', '.join([kw for kw in keywords if kw in x.lower()])
-                )
-                issues = final_filtered_data['issues'].dropna().tolist()
-                issue_counts = Counter(', '.join(issues).split(', '))
-                issue_df = pd.DataFrame(issue_counts.items(), columns=['Issue', 'Count']).sort_values(by='Count', ascending=False)
+                    # Calculate the percentage of comments containing the keyword
+                    keyword_count = len(keyword_comments)
+                    total_comments = len(final_filtered_data)
+                    keyword_percentage = (keyword_count / total_comments) * 100 if total_comments > 0 else 0
 
-                if not issue_df.empty:
-                    st.write("### Common Problems Identified")
-                    st.dataframe(issue_df, use_container_width=True)
+                    # Determine if it's a big issue
+                    is_big_issue = keyword_percentage > 0.1
 
-                    fig = px.bar(issue_df, x='Issue', y='Count', title='Common Problems in App Reviews')
-                    st.plotly_chart(fig)
-                else:
-                    st.write("No common problems identified based on the selected filters.")
+                    # Display results
+                    st.write(f"### Analysis for keyword: **{problem_keyword}**")
+                    st.write(f"Total comments: {total_comments}")
+                    st.write(f"Comments containing '{problem_keyword}': {keyword_count} ({keyword_percentage:.2f}%)")
+                    st.write(f"Is it a big issue? {'Yes' if is_big_issue else 'No'}")
 
+                    if keyword_count > 0:
+                        st.write(f"### Comments containing the keyword '{problem_keyword}':")
+                        st.dataframe(keyword_comments[['content']].reset_index(drop=True), use_container_width=True)
+                    else:
+                        st.write(f"No comments contain the keyword '{problem_keyword}'.")
+                
+                
                 # Generate and display sorted n-grams
                 st.header("Most Frequent Words and Phrases")
                 ngram_length = st.selectbox("Select phrase length:", [1, 2, 3, 4], index=0)
@@ -504,6 +509,38 @@ def app_analysis_page():
                             st.write(f"No comments contain the phrase: **{selected_phrase}**")
                 else:
                     st.write(f"No {ngram_length}-word phrases found.")
+                
+                # Define a custom colormap with vibrant colors
+                colors = ["#FF66C4", "#FF66C4", "#cbd5e8", "#2196F3", "#2E2E2E"]
+                custom_cmap = LinearSegmentedColormap.from_list("custom_palette", colors)
+
+                # Generate and display word cloud with custom colormap
+                wordcloud = WordCloud(width=800, height=400, background_color='white', colormap=custom_cmap).generate(cleaned_text)
+
+                fig, ax = plt.subplots(figsize=(10, 5))
+                ax.imshow(wordcloud, interpolation='bilinear')
+                ax.axis('off')
+                st.pyplot(fig)
+
+                # # Identify common problems based on sorted n-grams
+                # keywords = ["crash", "bug", "error", "slow", "freeze", "issue"]  # Example keywords
+                # final_filtered_data['issues'] = final_filtered_data['content'].apply(
+                #     lambda x: ', '.join([kw for kw in keywords if kw in x.lower()])
+                # )
+                # issues = final_filtered_data['issues'].dropna().tolist()
+                # issue_counts = Counter(', '.join(issues).split(', '))
+                # issue_df = pd.DataFrame(issue_counts.items(), columns=['Issue', 'Count']).sort_values(by='Count', ascending=False)
+
+                # if not issue_df.empty:
+                #     st.write("### Common Problems Identified")
+                #     st.dataframe(issue_df, use_container_width=True)
+
+                #     fig = px.bar(issue_df, x='Issue', y='Count', title='Common Problems in App Reviews')
+                #     st.plotly_chart(fig)
+                # else:
+                #     st.write("No common problems identified based on the selected filters.")
+
+
             else:
                 st.write("No data available after applying these filters. Please perform analysis first.")
         else:
