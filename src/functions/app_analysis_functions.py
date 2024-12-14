@@ -13,11 +13,25 @@ from src.functions.scraper import scrape_and_store_reviews
 # from symspellpy.symspellpy import SymSpell, Verbosity
 # import pkg_resources
 from collections import Counter
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+
+nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('punkt_tab')
+
+def preprocess_text_simple(text):
+    stop_words = set(stopwords.words('english'))  # Load NLTK's stop words
+    words = word_tokenize(text.lower())  # Tokenize and lowercase
+    filtered_words = [word for word in words if word.isalnum() and word not in stop_words]  # Remove stop words and non-alphanumeric tokens
+    return ' '.join(filtered_words)
 
 def generate_ngrams(text, n):
     words = text.split()
     ngrams = zip(*[words[i:] for i in range(n)])
-    return [' '.join(ngram) for ngram in ngrams]
+    sorted_ngrams = [' '.join(sorted(ngram)) for ngram in ngrams]  # Sort words in each n-gram
+    return sorted_ngrams
 
 def plot_content_length_distribution(df):
     """

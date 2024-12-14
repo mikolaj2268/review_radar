@@ -22,7 +22,8 @@ from src.functions.app_analysis_functions import (
     display_reviews,
     preprocess_data,
     plot_score_distribution,
-    generate_ngrams
+    generate_ngrams,
+    preprocess_text_simple
 )
 from src.database_connection.db_utils import get_app_data
 
@@ -83,6 +84,18 @@ def app_analysis_page():
             st.sidebar.write(f"No apps found matching '{search_query}'. Please try a different name.")
     else:
         st.sidebar.write("Please enter an application name to search.")
+
+    # Reset session state if the app changes
+    if selected_app_id:
+        if 'last_selected_app' not in st.session_state:
+            st.session_state['last_selected_app'] = selected_app_id
+
+        if st.session_state['last_selected_app'] != selected_app_id:
+            # Reset session state for analysis when a new app is selected
+            st.session_state['analysis_data'] = None
+            st.session_state['selected_model'] = None
+            st.session_state['analyzed_date_range'] = None
+            st.session_state['last_selected_app'] = selected_app_id
 
     # Define tabs
     tabs = st.tabs(["Data Downloading", "Sentiment Analysis", "Score Analysis", "Problems Identification"])
@@ -360,23 +373,6 @@ def app_analysis_page():
     with tabs[3]:
         st.header("Problems Identification")
 
-        import re
-
-        def preprocess_text_simple(text):
-            # Define a basic list of stop words
-            stop_words = {"a", "the", "and", "is", "in", "to", "of", "it", "for", "on", "this", "with", "at", "by", "an", "be", "are"}
-
-            # Convert to lowercase, remove non-alphanumeric characters, and repetitive sequences
-            text = re.sub(r'(\b\w+\b)(?:\s+\1)+', r'\1', text.lower())  # Remove repetitions
-            text = re.sub(r'[^a-zA-Z0-9\s]', '', text)  # Remove special characters
-
-            # Split into words and remove stop words
-            words = text.split()
-            filtered_words = [word for word in words if word not in stop_words]
-
-            return ' '.join(filtered_words)
-
-        # Ensure the data is properly filtered as in Tab 1
         if 'analysis_data' in st.session_state and st.session_state['analysis_data'] is not None:
             analyzed_data = st.session_state['analysis_data']
             analyzed_date_range = st.session_state['analyzed_date_range']
@@ -393,20 +389,19 @@ def app_analysis_page():
 
             if final_filtered_data is not None and not final_filtered_data.empty:
                 # Preprocess text data
-                combined_text = ' '.join(final_filtered_data['content'].dropna().tolist()).lower()
+                combined_text = ' '.join(final_filtered_data['content'].dropna().tolist())
                 cleaned_text = preprocess_text_simple(combined_text)
 
                 # Generate and display word cloud
                 wordcloud = WordCloud(width=800, height=400, background_color='white').generate(cleaned_text)
 
-                # Display the word cloud using matplotlib
                 fig, ax = plt.subplots(figsize=(10, 5))
                 ax.imshow(wordcloud, interpolation='bilinear')
                 ax.axis('off')
                 st.pyplot(fig)
 
-                # Identify common problems based on keywords
-                keywords = ["crash", "bug", "error", "slow", "freeze", "issue"]
+                # Identify common problems based on sorted n-grams
+                keywords = ["crash", "bug", "error", "slow", "freeze", "issue"]  # Example keywords
                 final_filtered_data['issues'] = final_filtered_data['content'].apply(
                     lambda x: ', '.join([kw for kw in keywords if kw in x.lower()])
                 )
@@ -423,7 +418,7 @@ def app_analysis_page():
                 else:
                     st.write("No common problems identified based on the selected filters.")
 
-                # Generate and display most frequent words and phrases
+                # Generate and display sorted n-grams
                 st.header("Most Frequent Words and Phrases")
                 ngram_length = st.selectbox("Select phrase length:", [1, 2, 3, 4], index=0)
 
@@ -442,16 +437,24 @@ def app_analysis_page():
 
                     if selected_phrase:
                         st.write(f"Comments containing the phrase: **{selected_phrase}**")
+                        
+                        # Ensure content is preprocessed similarly to n-grams
                         related_comments = final_filtered_data[
-                            final_filtered_data['content'].str.contains(selected_phrase, case=False, na=False)
+                            final_filtered_data['content']
+                            .apply(lambda x: selected_phrase in ' '.join(sorted(x.lower().split())))
                         ]
-                        st.dataframe(related_comments[['content']].reset_index(drop=True), use_container_width=True)
+                        
+                        if not related_comments.empty:
+                            st.dataframe(related_comments[['content']].reset_index(drop=True), use_container_width=True)
+                        else:
+                            st.write(f"No comments contain the phrase: **{selected_phrase}**")
                 else:
                     st.write(f"No {ngram_length}-word phrases found.")
             else:
                 st.write("No data available after applying these filters. Please perform analysis first.")
         else:
             st.write("No data available. Perform analysis first.")
+
 
 
     conn.close()
