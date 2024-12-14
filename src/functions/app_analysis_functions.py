@@ -21,6 +21,40 @@ nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('punkt_tab')
 
+def plot_daily_average_rating(data):
+    """
+    Generate a line plot of the daily average rating over time.
+
+    Parameters:
+    - data (pd.DataFrame): DataFrame containing at least 'at' (datetime) and 'score' columns.
+
+    Returns:
+    - plotly.graph_objects.Figure: The generated line plot.
+    """
+    # Ensure the 'at' column is in datetime format
+    data['at'] = pd.to_datetime(data['at'])
+
+    # Group by date and calculate the mean score
+    daily_avg_rating = data.groupby(data['at'].dt.date)['score'].mean().reset_index()
+    daily_avg_rating.columns = ['Date', 'Average Score']
+
+    # Create the plot
+    fig = px.line(
+        daily_avg_rating,
+        x="Date",
+        y="Average Score",
+        title="Daily Average Rating Over Time",
+        labels={"Date": "Date", "Average Score": "Average Rating"},
+    )
+
+    fig.update_layout(
+        xaxis_title="Date",
+        yaxis_title="Average Rating",
+        yaxis=dict(range=[1, 5])  # Assuming scores range between 1 and 5
+    )
+
+    return fig
+
 def preprocess_text_simple(text):
     stop_words = set(stopwords.words('english'))  # Load NLTK's stop words
     words = word_tokenize(text.lower())  # Tokenize and lowercase
@@ -67,7 +101,7 @@ def plot_score_distribution(df):
     return fig
 
 
-def preprocess_data(df, model=None, min_records=100, apply_lemmatization=True, correct_spelling=False):
+def preprocess_data(df, model=None, min_records=100, apply_lemmatization=True):
     """
     Preprocess the given DataFrame for sentiment analysis and visualization.
     
@@ -122,18 +156,12 @@ def preprocess_data(df, model=None, min_records=100, apply_lemmatization=True, c
         tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")  
         df['tokens'] = df['content'].apply(lambda x: tokenizer.tokenize(x))
 
-    # Step 6: Correct Spelling
-    if correct_spelling:
-        def correct_text(text):
-            suggestions = sym_spell.lookup_compound(text, max_edit_distance=2)
-            return suggestions[0].term if suggestions else text
-        df['content'] = df['content'].apply(correct_text)
 
-    # Step 7: Handle Small Datasets
+    # Step 6: Handle Small Datasets
     if len(df) < min_records:
         print(f"Warning: The dataset contains only {len(df)} records. Consider collecting more data.")
     
-    # Step 8: Add Features
+    # Step 7: Add Features
     df['content_length'] = df['content'].str.len()
     if 'thumbs_up_count' in df.columns:
         df['thumbs_up_count'] = df['thumbs_up_count'].clip(lower=0)

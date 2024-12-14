@@ -23,7 +23,8 @@ from src.functions.app_analysis_functions import (
     preprocess_data,
     plot_score_distribution,
     generate_ngrams,
-    preprocess_text_simple
+    preprocess_text_simple,
+    plot_daily_average_rating
 )
 from src.database_connection.db_utils import get_app_data
 
@@ -365,8 +366,61 @@ def app_analysis_page():
 
     with tabs[2]:
         if 'analysis_data' in st.session_state and st.session_state['analysis_data'] is not None:
+            # Score Distribution Plot
+            st.write("### Score Distribution")
             score_fig = plot_score_distribution(st.session_state['analysis_data'])
             st.plotly_chart(score_fig)
+            
+            # Daily Average Rating Over Time
+            st.write("### Daily Average Rating Over Time")
+            
+            displayed_data = st.session_state['analysis_data']
+            
+            # Group by 'at' and calculate the mean score
+            metrics_over_time = (
+                displayed_data
+                .groupby('at', as_index=False)['score']
+                .mean(numeric_only=True)
+            )
+            
+            if not metrics_over_time.empty:
+                # Create a line plot for the daily average rating
+                fig_line = px.line(
+                    metrics_over_time,
+                    x='at',
+                    y='score',
+                    labels={'at': 'Date', 'score': 'Average Score'},
+                    title="Daily Average Rating Over Time"
+                )
+                fig_line.update_layout(yaxis=dict(range=[1, 5]))  # Assuming scores are between 1 and 5
+                st.plotly_chart(fig_line)
+
+                # Calculate daily changes
+                metrics_over_time['Change'] = metrics_over_time['score'].diff()
+                
+                # Find the biggest drop and growth
+                max_growth = metrics_over_time.loc[metrics_over_time['Change'].idxmax()] if metrics_over_time['Change'].max() > 0 else None
+                max_drop = metrics_over_time.loc[metrics_over_time['Change'].idxmin()] if metrics_over_time['Change'].min() < 0 else None
+                
+                # Display table with results
+                st.write("### Biggest Daily Changes")
+                if max_growth is not None or max_drop is not None:
+                    changes_table = pd.DataFrame(
+                        {
+                            "Type": ["Growth", "Drop"],
+                            "Date": [max_growth['at'] if max_growth is not None else None, max_drop['at'] if max_drop is not None else None],
+                            "Change in Average Score (%)": [
+                                f"{max_growth['Change'] * 100:.2f}%" if max_growth is not None else None,
+                                f"{max_drop['Change'] * 100:.2f}%" if max_drop is not None else None,
+                            ],
+                        }
+                    )
+                    st.dataframe(changes_table, use_container_width=True)
+                else:
+                    st.write("No significant changes detected in daily average ratings.")
+
+            else:
+                st.write("No data available for plotting.")
         else:
             st.write("No data available. Perform analysis first.")
 
