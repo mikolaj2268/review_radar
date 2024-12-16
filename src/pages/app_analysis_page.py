@@ -77,6 +77,7 @@ def app_analysis_page():
                 selected_app = chosen_app.get('title', 'Unknown App')
                 selected_app_id = chosen_app.get('appId', None)
                 selected_app_icon = chosen_app.get('icon', None)
+                st.session_state['selected_app_icon'] = chosen_app.get('icon', None)
                 
                 
                 if not selected_app_id:
@@ -193,8 +194,7 @@ def app_analysis_page():
                     app_data['at'] = pd.to_datetime(app_data['at']).dt.date
                     st.session_state.app_data = app_data  # Update raw preprocessed data
                      # Save app icon in session state
-                    st.session_state['selected_app_icon'] = selected_app_icon
-                    st.session_state['selected_app_name'] = selected_app
+                    st.session_state['selected_app_icon'] = chosen_app.get('icon', None)
                     st.write(f"### Fetched Data for **{selected_app}**:")
                     st.dataframe(app_data)
                 else:
