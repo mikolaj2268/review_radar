@@ -78,6 +78,7 @@ def app_analysis_page():
                 selected_app_id = chosen_app.get('appId', None)
                 selected_app_icon = chosen_app.get('icon', None)
                 
+                
                 if not selected_app_id:
                     st.sidebar.error("Selected app does not have a valid App ID.")
                     selected_app = None
@@ -147,7 +148,7 @@ def app_analysis_page():
         if 'stop_download' not in st.session_state:
             st.session_state.stop_download = False
         if 'app_data' not in st.session_state:
-            st.session_state.app_data = None  # For raw preprocessed data
+            st.session_state.app_data = None  
 
         if selected_app and selected_app_id:
             # Handle downloading reviews
@@ -191,6 +192,9 @@ def app_analysis_page():
                     app_data = preprocess_data(app_data)
                     app_data['at'] = pd.to_datetime(app_data['at']).dt.date
                     st.session_state.app_data = app_data  # Update raw preprocessed data
+                     # Save app icon in session state
+                    st.session_state['selected_app_icon'] = selected_app_icon
+                    st.session_state['selected_app_name'] = selected_app
                     st.write(f"### Fetched Data for **{selected_app}**:")
                     st.dataframe(app_data)
                 else:
@@ -351,7 +355,7 @@ def app_analysis_page():
                     if displayed_data is not None and not displayed_data.empty:
                         st.write("Analysis Completed!")
                         date_range_str = f"{st.session_state['selected_date_range'][0]} to {st.session_state['selected_date_range'][1]}"
-                        cols = st.columns([0.8, 0.2])
+                        cols = st.columns([0.9, 0.1])
                         with cols[0]:
                             st.title(selected_app)
                             # Display date range and model name
@@ -418,6 +422,16 @@ def app_analysis_page():
             st.write("Please select an application to perform sentiment analysis.")
 
     with tabs[2]:
+        # Display the logo at the top-right corner
+        cols = st.columns([0.9, 0.1])
+        with cols[1]:
+            if 'selected_app_icon' in st.session_state and st.session_state['selected_app_icon']:
+                st.image(
+                    st.session_state['selected_app_icon'],
+                    use_container_width=True
+                )
+        with cols[0]:
+            st.header("Score Analysis")
         # Check if raw app data is available
         if 'app_data' in st.session_state and st.session_state['app_data'] is not None:
             data_to_display = st.session_state['app_data']
@@ -498,7 +512,16 @@ def app_analysis_page():
             st.write("No data available. Please download reviews first.")
 
     with tabs[3]:
-        st.header("Problems Identification")
+            # Display the logo at the top-right corner
+        cols = st.columns([0.9, 0.1])
+        with cols[1]:
+            if 'selected_app_icon' in st.session_state and st.session_state['selected_app_icon']:
+                st.image(
+                    st.session_state['selected_app_icon'],
+                    use_container_width=True
+                )
+        with cols[0]:
+            st.header("Problems Identification")
         
         # Use raw data if available
         if 'app_data' in st.session_state and st.session_state['app_data'] is not None:
