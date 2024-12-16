@@ -135,16 +135,8 @@ def preprocess_data(df, model=None, min_records=100, apply_lemmatization=True):
     if model not in [None, 'VADER', 'Transformers']:
         raise ValueError("Invalid model specified. Use 'VADER' or 'Transformers'.")
 
-    # # Initialize SymSpell
-    # if correct_spelling:
-    #     sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
-    #     dictionary_path = pkg_resources.resource_filename("symspellpy", "frequency_dictionary_en_82_765.txt")
-    #     bigram_path = pkg_resources.resource_filename("symspellpy", "frequency_bigramdictionary_en_243_342.txt")
-    #     sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
-    #     sym_spell.load_bigram_dictionary(bigram_path, term_index=0, count_index=2)
-
     # Step 1: Drop unnecessary columns 
-    columns_to_drop = ['c_name', 'user_image', 'reply_content', 'replied_at', 'review_created_version']
+    columns_to_drop = ['c_name', 'user_image', 'reply_content', 'replied_at', 'review_created_version', 'review_id']
     df = df.drop(columns=[col for col in columns_to_drop if col in df.columns], errors='ignore')
 
     # Step 2: Basic Cleanup and Null Handling
