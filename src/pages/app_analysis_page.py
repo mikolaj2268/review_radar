@@ -343,7 +343,7 @@ def app_analysis_page():
                             sentiment_counts_df.columns = ['Sentiment', 'Count']
 
                             st.write("### Sentiment Distribution")
-                            fig = px.bar(sentiment_counts_df, x='Sentiment', y='Count')
+                            fig = px.bar(sentiment_counts_df, x='Sentiment', y='Count', color_discrete_sequence=['#2196F3'])
                             st.plotly_chart(fig)
 
                         st.write("### Average Sentiment Metrics Over Time")
@@ -355,6 +355,7 @@ def app_analysis_page():
                                 .mean(numeric_only=True)
                             )
                             fig_line = px.line(metrics_over_time, x='at', y=selected_metrics)
+                            fig_line.update_traces(line_color='#2196F3')
                             st.plotly_chart(fig_line)
                         else:
                             st.write("No numeric metrics selected to plot.")
@@ -367,61 +368,81 @@ def app_analysis_page():
 
     with tabs[2]:
         if 'analysis_data' in st.session_state and st.session_state['analysis_data'] is not None:
-            # Score Distribution Plot
-            st.write("### Score Distribution")
-            score_fig = plot_score_distribution(st.session_state['analysis_data'])
-            st.plotly_chart(score_fig)
-            
-            # Daily Average Rating Over Time
-            st.write("### Daily Average Rating Over Time")
-            
-            displayed_data = st.session_state['analysis_data']
-            
-            # Group by 'at' and calculate the mean score
-            metrics_over_time = (
-                displayed_data
-                .groupby('at', as_index=False)['score']
-                .mean(numeric_only=True)
-            )
-            
-            if not metrics_over_time.empty:
-                # Create a line plot for the daily average rating
-                fig_line = px.line(
-                    metrics_over_time,
-                    x='at',
-                    y='score',
-                    labels={'at': 'Date', 'score': 'Average Score'},
-                    title="Daily Average Rating Over Time"
-                )
-                fig_line.update_layout(yaxis=dict(range=[1, 5]))  # Assuming scores are between 1 and 5
-                st.plotly_chart(fig_line)
+            analyzed_data = st.session_state['analysis_data']
+            analyzed_date_range = st.session_state['analyzed_date_range']
 
-                # Calculate daily changes
-                metrics_over_time['Change'] = metrics_over_time['score'].diff()
-                
-                # Find the biggest drop and growth
-                max_growth = metrics_over_time.loc[metrics_over_time['Change'].idxmax()] if metrics_over_time['Change'].max() > 0 else None
-                max_drop = metrics_over_time.loc[metrics_over_time['Change'].idxmin()] if metrics_over_time['Change'].min() < 0 else None
-                
-                # Display table with results
-                st.write("### Biggest Daily Changes")
-                if max_growth is not None or max_drop is not None:
-                    changes_table = pd.DataFrame(
-                        {
-                            "Type": ["Growth", "Drop"],
-                            "Date": [max_growth['at'] if max_growth is not None else None, max_drop['at'] if max_drop is not None else None],
-                            "Change in Average Score (%)": [
-                                f"{max_growth['Change'] * 100:.2f}%" if max_growth is not None else None,
-                                f"{max_drop['Change'] * 100:.2f}%" if max_drop is not None else None,
-                            ],
-                        }
-                    )
-                    st.dataframe(changes_table, use_container_width=True)
-                else:
-                    st.write("No significant changes detected in daily average ratings.")
-
+            if selected_date_range[0] >= analyzed_date_range[0] and selected_date_range[1] <= analyzed_date_range[1]:
+                displayed_data = analyzed_data[
+                    (analyzed_data['at'] >= selected_date_range[0]) &
+                    (analyzed_data['at'] <= selected_date_range[1]) &
+                    (analyzed_data['score'].isin(selected_scores))
+                ]
             else:
-                st.write("No data available for plotting.")
+                st.warning("You've selected a broader date range than previously analyzed. Please re-run the analysis.")
+                displayed_data = None
+
+            if displayed_data is not None and not displayed_data.empty:
+                # Score Distribution Plot
+                st.write("### Score Distribution")
+                score_fig = plot_score_distribution(displayed_data)
+                st.plotly_chart(score_fig)
+
+                # Daily Average Rating Over Time
+                st.write("### Daily Average Rating Over Time")
+
+                # Group by 'at' and calculate the mean score
+                metrics_over_time = (
+                    displayed_data
+                    .groupby('at', as_index=False)['score']
+                    .mean(numeric_only=True)
+                )
+
+                if not metrics_over_time.empty:
+                    # Create a line plot for the daily average rating
+                    fig_line = px.line(
+                        metrics_over_time,
+                        x='at',
+                        y='score',
+                        labels={'at': 'Date', 'score': 'Average Score'},
+                        title="Daily Average Rating Over Time"
+                    )
+                    fig_line.update_traces(line_color='#2196F3')
+
+                    # Assuming scores are between 1 and 5
+                    fig_line.update_layout(yaxis=dict(range=[1, 5]))
+                    st.plotly_chart(fig_line)
+
+                    # Calculate daily changes
+                    metrics_over_time['Change'] = metrics_over_time['score'].diff()
+
+                    # Find the biggest drop and growth
+                    max_growth = metrics_over_time.loc[metrics_over_time['Change'].idxmax()] if metrics_over_time['Change'].max() > 0 else None
+                    max_drop = metrics_over_time.loc[metrics_over_time['Change'].idxmin()] if metrics_over_time['Change'].min() < 0 else None
+
+                    # Display table with results
+                    st.write("### Biggest Daily Changes")
+                    if max_growth is not None or max_drop is not None:
+                        changes_table = pd.DataFrame(
+                            {
+                                "Type": ["Growth", "Drop"],
+                                "Date": [
+                                    max_growth['at'] if max_growth is not None else None,
+                                    max_drop['at'] if max_drop is not None else None
+                                ],
+                                "Change in Average Score (%)": [
+                                    f"{max_growth['Change'] * 100:.2f}%" if max_growth is not None else None,
+                                    f"{max_drop['Change'] * 100:.2f}%" if max_drop is not None else None,
+                                ],
+                            }
+                        )
+                        st.dataframe(changes_table, use_container_width=True)
+                    else:
+                        st.write("No significant changes detected in daily average ratings.")
+
+                else:
+                    st.write("No data available for plotting.")
+            else:
+                st.write("No data available after applying these filters. Please perform analysis first.")
         else:
             st.write("No data available. Perform analysis first.")
 
@@ -489,7 +510,7 @@ def app_analysis_page():
                     st.write(f"### Most Common {ngram_length}-Word Phrases")
                     st.dataframe(ngram_df.head(10).reset_index(drop=True), use_container_width=True)
 
-                    fig = px.bar(ngram_df.head(10), x='Phrase', y='Count', title=f'Top 10 Most Common {ngram_length}-Word Phrases')
+                    fig = px.bar(ngram_df.head(10), x='Phrase', y='Count', title=f'Top 10 Most Common {ngram_length}-Word Phrases', color_discrete_sequence=['#2196F3'])
                     st.plotly_chart(fig)
 
                     selected_phrase = st.selectbox("Select a phrase to view related comments:", ngram_df['Phrase'].head(10).tolist())

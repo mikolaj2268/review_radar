@@ -80,25 +80,39 @@ def plot_content_length_distribution(df):
 
 def plot_score_distribution(df):
     """
-    Plot the distribution of scores.
+    Plot the distribution of scores as percentages.
     
     Parameters:
-    df (pd.DataFrame): The input DataFrame containing the reviews.
+    df (pd.DataFrame): The input DataFrame containing the reviews and a 'score' column.
     """
-    fig = px.histogram(
-        df, 
-        x='score', 
-        nbins=5, 
+    # Calculate the percentage distribution
+    score_counts = df['score'].value_counts(normalize=True).sort_index()
+    score_distribution_df = score_counts.reset_index()
+    score_distribution_df.columns = ['Score', 'Percentage']
+    
+    # Create a histogram with percentages
+    fig = px.bar(
+        score_distribution_df,
+        x='Score',
+        y='Percentage',
         title='Distribution of Scores',
-        category_orders={'score': [1, 2, 3, 4, 5]}
+        category_orders={'Score': [1, 2, 3, 4, 5]},
+        text='Percentage',
+        color_discrete_sequence=['#2196F3']
     )
+    
+    # Update layout and formatting
     fig.update_layout(
-        xaxis_title='Score', 
+        xaxis_title='Score',
         yaxis_title='Percentage',
         yaxis=dict(tickformat=".0%")
     )
-    fig.update_traces(texttemplate='%{y:.2%}', textposition='outside')
+    
+    # Ensure text appears outside the bars
+    fig.update_traces(texttemplate='%{text:.2%}', textposition='outside')
+    
     return fig
+
 
 
 def preprocess_data(df, model=None, min_records=100, apply_lemmatization=True):
