@@ -98,6 +98,22 @@ def app_analysis_page():
             st.session_state['selected_model'] = None
             st.session_state['analyzed_date_range'] = None
             st.session_state['last_selected_app'] = selected_app_id
+    
+        # Initialize session variables for date range
+        if 'selected_date_range' not in st.session_state:
+            st.session_state['selected_date_range'] = (datetime.now() - timedelta(days=30), datetime.now())
+
+        # Reset selected_date_range if a new app is selected
+        if st.session_state['last_selected_app'] != selected_app_id:
+            st.session_state['selected_date_range'] = (datetime.now() - timedelta(days=30), datetime.now())
+
+        # Initialize session variables for selected scores
+        if 'selected_scores' not in st.session_state:
+            st.session_state['selected_scores'] = [1, 2, 3, 4, 5]  # Default to all scores selected
+
+        # Reset selected_scores if a new app is selected
+        if st.session_state['last_selected_app'] != selected_app_id:
+            st.session_state['selected_scores'] = [1, 2, 3, 4, 5]  # Reset to default when a new app is selected
 
     # Define tabs
     tabs = st.tabs(["Data Downloading", "Sentiment Analysis", "Score Analysis", "Problems Identification"])
@@ -115,6 +131,8 @@ def app_analysis_page():
             key="end_date_input",
         )
 
+        st.session_state['selected_date_range'] = (start_date_input, end_date_input)
+
         # Convert dates to datetime objects
         start_date = datetime.combine(start_date_input, datetime.min.time())
         end_date = datetime.combine(end_date_input, datetime.max.time())
@@ -123,12 +141,16 @@ def app_analysis_page():
         perform_analysis_button = st.button("Download reviews")
         stop_download_button = st.button("Stop downloading")
 
+        # Initialize session state variables
         if 'analysis_result' not in st.session_state:
             st.session_state.analysis_result = None
         if 'stop_download' not in st.session_state:
             st.session_state.stop_download = False
+        if 'app_data' not in st.session_state:
+            st.session_state.app_data = None  # For raw preprocessed data
 
         if selected_app and selected_app_id:
+            # Handle downloading reviews
             if perform_analysis_button:
                 st.session_state.stop_download = False
 
@@ -146,12 +168,35 @@ def app_analysis_page():
                     status_placeholder,
                     missing_placeholder
                 )
-                # Display reviews
-                st.session_state.analysis_result = display_reviews(conn, selected_app, start_date, end_date)
+
+                # Update raw data in session state
+                app_data = get_app_data(conn, selected_app)
+                if not app_data.empty:
+                    app_data = preprocess_data(app_data)
+                    app_data['at'] = pd.to_datetime(app_data['at']).dt.date
+                    st.session_state.app_data = app_data  # Update raw preprocessed data
+                    st.write(f"### Fetched Data for **{selected_app}**:")
+                    st.dataframe(app_data)
+                else:
+                    st.session_state.app_data = None
+                    st.warning(f"No data available for {selected_app}. Please try another app.")
+
             elif stop_download_button:
                 st.session_state.stop_download = True
                 st.info("Stopping download and performing analysis with existing data...")
-                st.session_state.analysis_result = display_reviews(conn, selected_app, start_date, end_date)
+
+                # Update raw data in session state
+                app_data = get_app_data(conn, selected_app)
+                if not app_data.empty:
+                    app_data = preprocess_data(app_data)
+                    app_data['at'] = pd.to_datetime(app_data['at']).dt.date
+                    st.session_state.app_data = app_data  # Update raw preprocessed data
+                    st.write(f"### Fetched Data for **{selected_app}**:")
+                    st.dataframe(app_data)
+                else:
+                    st.session_state.app_data = None
+                    st.warning(f"No data available for {selected_app}. Please try another app.")
+
         elif perform_analysis_button or stop_download_button:
             st.warning("Please select an application before proceeding.")
 
@@ -161,6 +206,7 @@ def app_analysis_page():
             st.dataframe(st.session_state.analysis_result)
         else:
             st.write("No analysis performed yet or no reviews found for the selected date range.")
+
 
     with tabs[1]:
         if selected_app:
@@ -175,7 +221,7 @@ def app_analysis_page():
                 max_date = app_data['at'].max()
 
                 if min_date < max_date:
-                    selected_date_range = st.sidebar.slider(
+                    st.session_state['selected_date_range'] = st.sidebar.slider(
                         "Select Date Range",
                         min_value=min_date,
                         max_value=max_date,
@@ -183,7 +229,7 @@ def app_analysis_page():
                     )
                 else:
                     st.sidebar.warning("Not enough data to display the date range slider.")
-                    selected_date_range = (min_date, max_date)
+                    st.session_state['selected_date_range'] = (min_date, max_date)
 
                 analysis_data = st.session_state.get('analysis_data', None)
                 analyzed_date_range = st.session_state.get('analyzed_date_range', None)
@@ -191,19 +237,24 @@ def app_analysis_page():
                 can_filter_existing = False
                 if analysis_data is not None and analyzed_date_range is not None:
                     # Check if selected_date_range is within analyzed_date_range
-                    if selected_date_range[0] >= analyzed_date_range[0] and selected_date_range[1] <= analyzed_date_range[1]:
+                    if st.session_state['selected_date_range'][0] >= analyzed_date_range[0] and st.session_state['selected_date_range'][1] <= analyzed_date_range[1]:
                         can_filter_existing = True
 
-                # Filters for scores
+                # Sidebar Filters for Scores
+                if 'selected_scores' not in st.session_state:
+                    st.session_state['selected_scores'] = [1, 2, 3, 4, 5]  # Default to all scores selected
+
                 st.sidebar.write("Filter by Scores:")
                 score_filters = {
-                    1: st.sidebar.checkbox("1 Star", value=True),
-                    2: st.sidebar.checkbox("2 Stars", value=True),
-                    3: st.sidebar.checkbox("3 Stars", value=True),
-                    4: st.sidebar.checkbox("4 Stars", value=True),
-                    5: st.sidebar.checkbox("5 Stars", value=True),
+                    1: st.sidebar.checkbox("1 Star", value=1 in st.session_state['selected_scores']),
+                    2: st.sidebar.checkbox("2 Stars", value=2 in st.session_state['selected_scores']),
+                    3: st.sidebar.checkbox("3 Stars", value=3 in st.session_state['selected_scores']),
+                    4: st.sidebar.checkbox("4 Stars", value=4 in st.session_state['selected_scores']),
+                    5: st.sidebar.checkbox("5 Stars", value=5 in st.session_state['selected_scores']),
                 }
-                selected_scores = [score for score, selected in score_filters.items() if selected]
+
+                # Update session state with selected scores
+                st.session_state['selected_scores'] = [score for score, selected in score_filters.items() if selected]
 
                 st.write("### Select Sentiment Analysis Model")
                 model_options = ["TextBlob", "VADER", "DistilBERT", "RoBERTa"]
@@ -234,15 +285,15 @@ def app_analysis_page():
 
                 if can_filter_existing:
                     final_filtered_data = analysis_data[
-                        (analysis_data['at'] >= selected_date_range[0]) &
-                        (analysis_data['at'] <= selected_date_range[1]) &
-                        (analysis_data['score'].isin(selected_scores))
+                        (analysis_data['at'] >= st.session_state['selected_date_range'][0]) &
+                        (analysis_data['at'] <= st.session_state['selected_date_range'][1]) &
+                        (analysis_data['score'].isin(st.session_state['selected_scores']))
                     ]
                 else:
                     final_filtered_data = app_data[
-                        (app_data['at'] >= selected_date_range[0]) &
-                        (app_data['at'] <= selected_date_range[1]) &
-                        (app_data['score'].isin(selected_scores))
+                        (app_data['at'] >= st.session_state['selected_date_range'][0]) &
+                        (app_data['at'] <= st.session_state['selected_date_range'][1]) &
+                        (app_data['score'].isin(st.session_state['selected_scores']))
                     ]
 
                 if perform_analysis:
@@ -274,7 +325,7 @@ def app_analysis_page():
                             st.session_state['selected_model'] = selected_model
                             st.session_state['selected_app_name'] = selected_app
                             st.session_state['selected_app_icon'] = selected_app_icon
-                            st.session_state['analyzed_date_range'] = selected_date_range
+                            st.session_state['analyzed_date_range'] = st.session_state['selected_date_range']
                         else:
                             st.error("Selected model is not supported.")
                     else:
@@ -287,11 +338,11 @@ def app_analysis_page():
                     selected_app_icon = st.session_state['selected_app_icon']
                     analyzed_date_range = st.session_state['analyzed_date_range']
 
-                    if selected_date_range[0] >= analyzed_date_range[0] and selected_date_range[1] <= analyzed_date_range[1]:
+                    if st.session_state['selected_date_range'][0] >= analyzed_date_range[0] and st.session_state['selected_date_range'][1] <= analyzed_date_range[1]:
                         displayed_data = analyzed_data[
-                            (analyzed_data['at'] >= selected_date_range[0]) &
-                            (analyzed_data['at'] <= selected_date_range[1]) &
-                            (analyzed_data['score'].isin(selected_scores))
+                            (analyzed_data['at'] >= st.session_state['selected_date_range'][0]) &
+                            (analyzed_data['at'] <= st.session_state['selected_date_range'][1]) &
+                            (analyzed_data['score'].isin(st.session_state['selected_scores']))
                         ]
                     else:
                         st.warning("You've selected a broader date range than previously analyzed. Please re-run the analysis.")
@@ -299,7 +350,7 @@ def app_analysis_page():
 
                     if displayed_data is not None and not displayed_data.empty:
                         st.write("Analysis Completed!")
-                        date_range_str = f"{selected_date_range[0]} to {selected_date_range[1]}"
+                        date_range_str = f"{st.session_state['selected_date_range'][0]} to {st.session_state['selected_date_range'][1]}"
                         cols = st.columns([0.8, 0.2])
                         with cols[0]:
                             st.title(selected_app)
@@ -367,21 +418,22 @@ def app_analysis_page():
             st.write("Please select an application to perform sentiment analysis.")
 
     with tabs[2]:
-        if 'analysis_data' in st.session_state and st.session_state['analysis_data'] is not None:
-            analyzed_data = st.session_state['analysis_data']
-            analyzed_date_range = st.session_state['analyzed_date_range']
+        # Check if raw app data is available
+        if 'app_data' in st.session_state and st.session_state['app_data'] is not None:
+            data_to_display = st.session_state['app_data']
+        else:
+            st.write("No data available. Please select an application and download reviews.")
+            data_to_display = None
 
-            if selected_date_range[0] >= analyzed_date_range[0] and selected_date_range[1] <= analyzed_date_range[1]:
-                displayed_data = analyzed_data[
-                    (analyzed_data['at'] >= selected_date_range[0]) &
-                    (analyzed_data['at'] <= selected_date_range[1]) &
-                    (analyzed_data['score'].isin(selected_scores))
-                ]
-            else:
-                st.warning("You've selected a broader date range than previously analyzed. Please re-run the analysis.")
-                displayed_data = None
+        if data_to_display is not None:
+            # Filter data based on selected date range and scores
+            displayed_data = data_to_display[
+                (data_to_display['at'] >= st.session_state['selected_date_range'][0]) &
+                (data_to_display['at'] <= st.session_state['selected_date_range'][1]) &
+                (data_to_display['score'].isin(st.session_state['selected_scores']))
+            ]
 
-            if displayed_data is not None and not displayed_data.empty:
+            if not displayed_data.empty:
                 # Score Distribution Plot
                 st.write("### Score Distribution")
                 score_fig = plot_score_distribution(displayed_data)
@@ -438,32 +490,32 @@ def app_analysis_page():
                         st.dataframe(changes_table, use_container_width=True)
                     else:
                         st.write("No significant changes detected in daily average ratings.")
-
                 else:
                     st.write("No data available for plotting.")
             else:
-                st.write("No data available after applying these filters. Please perform analysis first.")
+                st.write("No data available after applying these filters.")
         else:
-            st.write("No data available. Perform analysis first.")
+            st.write("No data available. Please download reviews first.")
 
     with tabs[3]:
         st.header("Problems Identification")
         
-        if 'analysis_data' in st.session_state and st.session_state['analysis_data'] is not None:
-            analyzed_data = st.session_state['analysis_data']
-            analyzed_date_range = st.session_state['analyzed_date_range']
+        # Use raw data if available
+        if 'app_data' in st.session_state and st.session_state['app_data'] is not None:
+            data_to_display = st.session_state['app_data']
+        else:
+            st.write("No data available. Please select an application and download reviews.")
+            data_to_display = None
 
-            if selected_date_range[0] >= analyzed_date_range[0] and selected_date_range[1] <= analyzed_date_range[1]:
-                final_filtered_data = analyzed_data[
-                    (analyzed_data['at'] >= selected_date_range[0]) &
-                    (analyzed_data['at'] <= selected_date_range[1]) &
-                    (analyzed_data['score'].isin(selected_scores))
-                ]
-            else:
-                st.warning("You've selected a broader date range than previously analyzed. Please re-run the analysis.")
-                final_filtered_data = None
+        if data_to_display is not None:
+            # Filter data based on selected date range and scores
+            final_filtered_data = data_to_display[
+                (data_to_display['at'] >= st.session_state['selected_date_range'][0]) &
+                (data_to_display['at'] <= st.session_state['selected_date_range'][1]) &
+                (data_to_display['score'].isin(st.session_state['selected_scores']))
+            ]
 
-            if final_filtered_data is not None and not final_filtered_data.empty:
+            if not final_filtered_data.empty:
                 # Preprocess text data
                 combined_text = ' '.join(final_filtered_data['content'].dropna().tolist())
                 cleaned_text = preprocess_text_simple(combined_text)
@@ -496,8 +548,7 @@ def app_analysis_page():
                         st.dataframe(keyword_comments[['content']].reset_index(drop=True), use_container_width=True)
                     else:
                         st.write(f"No comments contain the keyword '{problem_keyword}'.")
-                
-                
+
                 # Generate and display sorted n-grams
                 st.header("Most Frequent Words and Phrases")
                 ngram_length = st.selectbox("Select phrase length:", [1, 2, 3, 4], index=0)
@@ -530,7 +581,7 @@ def app_analysis_page():
                             st.write(f"No comments contain the phrase: **{selected_phrase}**")
                 else:
                     st.write(f"No {ngram_length}-word phrases found.")
-                
+
                 # Define a custom colormap with vibrant colors
                 colors = ["#FF66C4", "#FF66C4", "#cbd5e8", "#2196F3", "#2E2E2E"]
                 custom_cmap = LinearSegmentedColormap.from_list("custom_palette", colors)
@@ -542,30 +593,10 @@ def app_analysis_page():
                 ax.imshow(wordcloud, interpolation='bilinear')
                 ax.axis('off')
                 st.pyplot(fig)
-
-                # # Identify common problems based on sorted n-grams
-                # keywords = ["crash", "bug", "error", "slow", "freeze", "issue"]  # Example keywords
-                # final_filtered_data['issues'] = final_filtered_data['content'].apply(
-                #     lambda x: ', '.join([kw for kw in keywords if kw in x.lower()])
-                # )
-                # issues = final_filtered_data['issues'].dropna().tolist()
-                # issue_counts = Counter(', '.join(issues).split(', '))
-                # issue_df = pd.DataFrame(issue_counts.items(), columns=['Issue', 'Count']).sort_values(by='Count', ascending=False)
-
-                # if not issue_df.empty:
-                #     st.write("### Common Problems Identified")
-                #     st.dataframe(issue_df, use_container_width=True)
-
-                #     fig = px.bar(issue_df, x='Issue', y='Count', title='Common Problems in App Reviews')
-                #     st.plotly_chart(fig)
-                # else:
-                #     st.write("No common problems identified based on the selected filters.")
-
-
             else:
-                st.write("No data available after applying these filters. Please perform analysis first.")
+                st.write("No data available after applying these filters.")
         else:
-            st.write("No data available. Perform analysis first.")
+            st.write("No data available. Please download reviews first.")
 
 
 
