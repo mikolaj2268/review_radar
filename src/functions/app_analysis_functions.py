@@ -17,6 +17,7 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
+
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('punkt_tab')
@@ -63,9 +64,9 @@ def preprocess_text_simple(text):
 
 def generate_ngrams(text, n):
     words = text.split()
-    ngrams = zip(*[words[i:] for i in range(n)])
-    sorted_ngrams = [' '.join(sorted(ngram)) for ngram in ngrams]  # Sort words in each n-gram
-    return sorted_ngrams
+    ngrams = [' '.join(words[i:i+n]) for i in range(len(words) - n + 1)]
+    return ngrams
+
 
 def plot_content_length_distribution(df):
     """

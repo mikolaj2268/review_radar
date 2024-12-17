@@ -13,6 +13,7 @@ import os
 from tqdm import tqdm
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
+import re
 
 from src.functions.app_analysis_functions import (
     get_db_connection,
@@ -539,17 +540,16 @@ def app_analysis_page():
             ]
 
             if not final_filtered_data.empty:
-                # Preprocess text data
-                combined_text = ' '.join(final_filtered_data['content'].dropna().tolist())
-                cleaned_text = preprocess_text_simple(combined_text)
+                # Preprocess text data for each row and store it in a new column
+                final_filtered_data['cleaned_content'] = final_filtered_data['content'].apply(preprocess_text_simple)
 
                 # User input for problem identification
                 problem_keyword = st.text_input("Enter a keyword to identify problems (e.g., 'bug')")
 
                 if problem_keyword:
-                    # Filter comments containing the exact keyword
+                    # Filter comments containing the exact keyword from the cleaned content
                     keyword_comments = final_filtered_data[
-                        final_filtered_data['content'].str.contains(rf'\b{problem_keyword}\b', case=False, na=False)
+                        final_filtered_data['cleaned_content'].str.contains(rf'\b{problem_keyword}\b', case=False, na=False)
                     ]
 
                     # Calculate the percentage of comments containing the keyword
@@ -557,14 +557,10 @@ def app_analysis_page():
                     total_comments = len(final_filtered_data)
                     keyword_percentage = (keyword_count / total_comments) * 100 if total_comments > 0 else 0
 
-                    # Determine if it's a big issue
-                    is_big_issue = keyword_percentage > 0.1
-
                     # Display results
                     st.write(f"### Analysis for keyword: **{problem_keyword}**")
                     st.write(f"Total comments: {total_comments}")
                     st.write(f"Comments containing '{problem_keyword}': {keyword_count} ({keyword_percentage:.2f}%)")
-                    st.write(f"Is it a big issue? {'Yes' if is_big_issue else 'No'}")
 
                     if keyword_count > 0:
                         st.write(f"### Comments containing the keyword '{problem_keyword}':")
@@ -572,36 +568,57 @@ def app_analysis_page():
                     else:
                         st.write(f"No comments contain the keyword '{problem_keyword}'.")
 
-                # Generate and display sorted n-grams
+                # Generate n-grams for each row and store them with row index
                 st.header("Most Frequent Words and Phrases")
                 ngram_length = st.selectbox("Select phrase length:", [1, 2, 3, 4], index=0)
 
-                ngrams = generate_ngrams(cleaned_text, ngram_length)
-                ngram_counts = Counter(ngrams)
+                all_ngrams = []
+                ngram_to_row_mapping = []  # To keep track of which row index generated the n-grams
+
+                for index, text in final_filtered_data['cleaned_content'].dropna().items():
+                    ngrams = generate_ngrams(text, ngram_length)
+                    all_ngrams.extend(ngrams)
+                    ngram_to_row_mapping.extend([(index, ngram) for ngram in ngrams])
+
+                # Count n-gram frequencies
+                ngram_counts = Counter(all_ngrams)
                 ngram_df = pd.DataFrame(ngram_counts.items(), columns=['Phrase', 'Count']).sort_values(by='Count', ascending=False)
 
                 if not ngram_df.empty:
-                    st.write(f"### Most Common {ngram_length}-Word Phrases")
+                    # Display the top 10 most common phrases
+                    st.write(f"### Top 10 Most Common {ngram_length}-Word Phrases")
                     st.dataframe(ngram_df.head(10).reset_index(drop=True), use_container_width=True)
 
-                    fig = px.bar(ngram_df.head(10), x='Phrase', y='Count', title=f'Top 10 Most Common {ngram_length}-Word Phrases', color_discrete_sequence=['#2196F3'])
+                    # Plot the bar chart for the top 10 phrases
+                    fig = px.bar(
+                        ngram_df.head(10),
+                        x='Phrase',
+                        y='Count',
+                        title=f"Top 10 Most Common {ngram_length}-Word Phrases",
+                        color_discrete_sequence=['#2196F3']
+                    )
                     st.plotly_chart(fig)
 
-                    selected_phrase = st.selectbox("Select a phrase to view related comments:", ngram_df['Phrase'].head(10).tolist())
+                    # Select a phrase to view related comments
+                    selected_phrase = st.selectbox(
+                        "Select a phrase to view related comments:",
+                        ngram_df['Phrase'].head(10).tolist()
+                    )
 
                     if selected_phrase:
-                        st.write(f"Comments containing the phrase: **{selected_phrase}**")
-                        
-                        # Ensure content is preprocessed similarly to n-grams
-                        related_comments = final_filtered_data[
-                            final_filtered_data['content']
-                            .apply(lambda x: selected_phrase in ' '.join(sorted(x.lower().split())))
+                        st.write(f"### Comments containing the phrase: **{selected_phrase}**")
+
+                        # Find the rows containing the selected phrase
+                        matching_rows = [
+                            row_index for row_index, ngram in ngram_to_row_mapping if ngram == selected_phrase
                         ]
-                        
+                        related_comments = final_filtered_data.loc[matching_rows, ['content']]
+
                         if not related_comments.empty:
-                            st.dataframe(related_comments[['content']].reset_index(drop=True), use_container_width=True)
+                            st.dataframe(related_comments.reset_index(drop=True), use_container_width=True)
                         else:
                             st.write(f"No comments contain the phrase: **{selected_phrase}**")
+
                 else:
                     st.write(f"No {ngram_length}-word phrases found.")
 
@@ -609,15 +626,19 @@ def app_analysis_page():
                 colors = ["#FF66C4", "#FF66C4", "#cbd5e8", "#2196F3", "#2E2E2E"]
                 custom_cmap = LinearSegmentedColormap.from_list("custom_palette", colors)
 
-                # Generate and display word cloud with custom colormap
-                wordcloud = WordCloud(width=800, height=400, background_color='white', colormap=custom_cmap).generate(cleaned_text)
+                # Generate and display word cloud for all content
+                st.header("Word Cloud")
+                all_cleaned_text = ' '.join(final_filtered_data['content'].apply(preprocess_text_simple))
+                wordcloud = WordCloud(width=800, height=400, background_color='white', colormap=custom_cmap).generate(all_cleaned_text)
 
                 fig, ax = plt.subplots(figsize=(10, 5))
                 ax.imshow(wordcloud, interpolation='bilinear')
                 ax.axis('off')
                 st.pyplot(fig)
+
             else:
                 st.write("No data available after applying these filters.")
+
         else:
             st.write("No data available. Please download reviews first.")
 
