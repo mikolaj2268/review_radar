@@ -14,6 +14,7 @@ from tqdm import tqdm
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import re
+import plotly.graph_objects as go
 
 from src.functions.app_analysis_functions import (
     get_db_connection,
@@ -405,13 +406,38 @@ def app_analysis_page():
                         st.write("### Average Sentiment Metrics Over Time")
                         selected_metrics = st.multiselect("Select metrics to plot over time:", model_numeric_cols, default=model_numeric_cols)
                         if selected_metrics:
+                            # Group by date and compute the mean for selected metrics
                             metrics_over_time = (
                                 displayed_data
                                 .groupby('at', as_index=False)[selected_metrics]
                                 .mean(numeric_only=True)
                             )
-                            fig_line = px.line(metrics_over_time, x='at', y=selected_metrics)
-                            fig_line.update_traces(line_color='#2196F3')
+
+                            # Rename 'at' to 'date' so the x-axis will show 'date'
+                            metrics_over_time.rename(columns={'at': 'date'}, inplace=True)
+
+                            # Convert data to long format for easy plotting of multiple metrics
+                            melted = metrics_over_time.melt(id_vars='date', value_vars=selected_metrics, var_name='metric', value_name='value')
+
+                            # Compute a 7-day moving average trend for each metric
+                            melted['trend'] = melted.groupby('metric')['value'].transform(lambda x: x.rolling(7, min_periods=1).mean())
+
+                            # Create a line chart for the original metric values
+                            fig_line = px.line(melted, x='date', y='value', color='metric', title='Average Sentiment Metrics Over Time')
+
+                            # Add the trend line as a dashed line for each metric
+                            for metric in selected_metrics:
+                                metric_data = melted[melted['metric'] == metric]
+                                fig_line.add_trace(
+                                    go.Scatter(
+                                        x=metric_data['date'],
+                                        y=metric_data['trend'],
+                                        mode='lines',
+                                        name=f'{metric} (Trend)',
+                                        line=dict(dash='dash')
+                                    )
+                                )
+
                             st.plotly_chart(fig_line)
                         else:
                             st.write("No numeric metrics selected to plot.")
