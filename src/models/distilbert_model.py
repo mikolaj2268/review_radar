@@ -38,13 +38,13 @@ def analyze_sentiment_distilbert(text):
         sentiment_label = "Positive" if positive_prob > negative_prob else "Negative"
         return {
             'distilbert_sentiment_label': sentiment_label,
-            'distilbert_negative_prob': negative_prob,
-            'distilbert_positive_prob': positive_prob
+            'distilbert_negative': negative_prob,
+            'distilbert_positive': positive_prob
         }
     except Exception as e:
         logger.error(f"Error in DistilBERT model for text: {text}\nError: {e}")
         return {
             'distilbert_sentiment_label': 'Error',
-            'distilbert_negative_prob': None,
-            'distilbert_positive_prob': None
+            'distilbert_negative': None,
+            'distilbert_positive': None
         }

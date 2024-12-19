@@ -61,15 +61,15 @@ def analyze_sentiment_roberta(text):
 
         return {
             'roberta_sentiment_label': label,
-            'roberta_negative_prob': negative_prob,
-            'roberta_neutral_prob': neutral_prob,
-            'roberta_positive_prob': positive_prob
+            'roberta_negative': negative_prob,
+            'roberta_neutral': neutral_prob,
+            'roberta_positive': positive_prob
         }
     except Exception as e:
         logger.error(f"Error processing text with RoBERTa: {e}")
         return {
             'roberta_sentiment_label': 'Error',
-            'roberta_negative_prob': None,
-            'roberta_neutral_prob': None,
-            'roberta_positive_prob': None
+            'roberta_negative': None,
+            'roberta_neutral': None,
+            'roberta_positive': None
         }

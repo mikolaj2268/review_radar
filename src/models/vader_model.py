@@ -21,16 +21,16 @@ def analyze_sentiment_vader(text):
         
         return {
             'vader_sentiment_label': label,
-            'vader_pos': pos,
-            'vader_neu': neu,
-            'vader_neg': neg,
+            'vader_positive': pos,
+            'vader_neutral': neu,
+            'vader_negative': neg,
             'vader_compound': compound
         }
     except Exception:
         return {
             'vader_sentiment_label': 'Error',
-            'vader_pos': None,
-            'vader_neu': None,
-            'vader_neg': None,
+            'vader_positive': None,
+            'vader_neutral': None,
+            'vader_negative': None,
             'vader_compound': None
         }
