@@ -18,9 +18,19 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
 
-nltk.download('stopwords')
-nltk.download('punkt')
-nltk.download('punkt_tab')
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords')
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
+try:
+    nltk.data.find('tokenizers/punkt_tab')
+except LookupError:
+    nltk.download('punkt_tab')
+    
 
 def plot_daily_average_rating(data):
     """
