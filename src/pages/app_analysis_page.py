@@ -441,6 +441,54 @@ def app_analysis_page():
                             st.plotly_chart(fig_line)
                         else:
                             st.write("No numeric metrics selected to plot.")
+                        
+                        # Determine best/worst comments logic based on model
+                        if selected_model == "TextBlob":
+                            # For TextBlob: best = highest textblob_polarity, worst = lowest textblob_polarity
+                            if 'textblob_polarity' in displayed_data.columns:
+                                best_10 = displayed_data.sort_values(by='textblob_polarity', ascending=False).head(10)
+                                worst_10 = displayed_data.sort_values(by='textblob_polarity', ascending=True).head(10)
+                            else:
+                                best_10 = None
+                                worst_10 = None
+                        else:
+                            # For other models
+                            if selected_model == "VADER":
+                                col_positive = 'vader_positive'
+                                col_negative = 'vader_negative'
+                            elif selected_model == "DistilBERT":
+                                col_positive = 'distilbert_positive'
+                                col_negative = 'distilbert_negative'
+                            elif selected_model == "RoBERTa":
+                                col_positive = 'roberta_positive'
+                                col_negative = 'roberta_negative'
+                            else:
+                                col_positive = None
+                                col_negative = None
+
+                            if col_positive and col_negative and col_positive in displayed_data.columns and col_negative in displayed_data.columns:
+                                # Best comments: highest positive, then lowest negative
+                                best_10 = displayed_data.sort_values(by=[col_positive, col_negative], ascending=[False, True]).head(10)
+                                # Worst comments: highest negative, then lowest positive
+                                worst_10 = displayed_data.sort_values(by=[col_negative, col_positive], ascending=[False, True]).head(10)
+                            else:
+                                best_10 = None
+                                worst_10 = None
+
+                        st.write("### Top 10 Best Comments")
+                        if best_10 is not None and not best_10.empty:
+                            # Show all metrics related to the chosen model plus content
+                            metrics_cols = [c for c in best_10.columns if c.startswith(selected_model.lower())]
+                            st.dataframe(best_10[['content'] + metrics_cols])
+                        else:
+                            st.write("No data available for best comments.")
+
+                        st.write("### Top 10 Worst Comments")
+                        if worst_10 is not None and not worst_10.empty:
+                            metrics_cols = [c for c in worst_10.columns if c.startswith(selected_model.lower())]
+                            st.dataframe(worst_10[['content'] + metrics_cols])
+                        else:
+                            st.write("No data available for worst comments.")
                     elif displayed_data is not None and displayed_data.empty:
                         st.write("No data available after applying these filters.")
             else:
