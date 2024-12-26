@@ -497,37 +497,41 @@ def app_analysis_page():
             st.write("Please select an application to perform sentiment analysis.")
 
     with tabs[2]:
-        # Display the logo at the top-right corner
+        # Display the logo and app name
         cols = st.columns([0.9, 0.1])
         date_range_str = f"{st.session_state['selected_date_range'][0]} to {st.session_state['selected_date_range'][1]}"
         with cols[0]:
             st.title(selected_app)
-            # Display date range and model name
             st.markdown(
                 f"<p style='font-size:20px; font-weight:bold;'>Date Range: {date_range_str}</p>",
                 unsafe_allow_html=True
             )
         with cols[1]:
             if 'selected_app_icon' in st.session_state and st.session_state['selected_app_icon']:
-                st.image(
-                    st.session_state['selected_app_icon'],
-                    use_container_width=True
-                )
-        with cols[0]:
-            st.header("Score Analysis")
-        # Check if raw app data is available
-        if 'app_data' in st.session_state and st.session_state['app_data'] is not None:
-            data_to_display = st.session_state['app_data']
-        else:
-            st.write("No data available. Please select an application and download reviews.")
-            data_to_display = None
+                st.image(st.session_state['selected_app_icon'], use_container_width=True)
 
-        if data_to_display is not None:
-            # Filter data based on selected date range and scores
-            displayed_data = data_to_display[
-                (data_to_display['at'] >= st.session_state['selected_date_range'][0]) &
-                (data_to_display['at'] <= st.session_state['selected_date_range'][1]) &
-                (data_to_display['score'].isin(st.session_state['selected_scores']))
+        st.header("Score Analysis")
+
+        # Fetch data from the database
+        if selected_app:
+            app_data = get_app_data(conn, selected_app)
+            if not app_data.empty:
+                app_data = preprocess_data(app_data)
+                app_data['at'] = pd.to_datetime(app_data['at']).dt.date
+                st.session_state['app_data'] = app_data
+            else:
+                st.write("No data available. Please select an application and download reviews.")
+                st.session_state['app_data'] = None
+
+        # Proceed if data is available
+        if 'app_data' in st.session_state and st.session_state['app_data'] is not None:
+            app_data = st.session_state['app_data']
+
+            # Apply filters based on date range and scores
+            displayed_data = app_data[
+                (app_data['at'] >= st.session_state['selected_date_range'][0]) &
+                (app_data['at'] <= st.session_state['selected_date_range'][1]) &
+                (app_data['score'].isin(st.session_state['selected_scores']))
             ]
 
             if not displayed_data.empty:
@@ -538,8 +542,6 @@ def app_analysis_page():
 
                 # Daily Average Rating Over Time
                 st.write("### Daily Average Rating Over Time")
-
-                # Group by 'at' and calculate the mean score
                 metrics_over_time = (
                     displayed_data
                     .groupby('at', as_index=False)['score']
@@ -547,7 +549,6 @@ def app_analysis_page():
                 )
 
                 if not metrics_over_time.empty:
-                    # Create a line plot for the daily average rating
                     fig_line = px.line(
                         metrics_over_time,
                         x='at',
@@ -556,8 +557,6 @@ def app_analysis_page():
                         title="Daily Average Rating Over Time"
                     )
                     fig_line.update_traces(line_color='#2196F3')
-
-                    # Assuming scores are between 1 and 5
                     fig_line.update_layout(yaxis=dict(range=[1, 5]))
                     st.plotly_chart(fig_line)
 
@@ -595,38 +594,41 @@ def app_analysis_page():
             st.write("No data available. Please download reviews first.")
 
     with tabs[3]:
-            # Display the logo at the top-right corner
+        # Display the logo and app name
         cols = st.columns([0.9, 0.1])
         date_range_str = f"{st.session_state['selected_date_range'][0]} to {st.session_state['selected_date_range'][1]}"
         with cols[0]:
             st.title(selected_app)
-            # Display date range and model name
             st.markdown(
                 f"<p style='font-size:20px; font-weight:bold;'>Date Range: {date_range_str}</p>",
                 unsafe_allow_html=True
             )
         with cols[1]:
             if 'selected_app_icon' in st.session_state and st.session_state['selected_app_icon']:
-                st.image(
-                    st.session_state['selected_app_icon'],
-                    use_container_width=True
-                )
-        with cols[0]:
-            st.header("Problems Identification")
-        
-        # Use raw data if available
-        if 'app_data' in st.session_state and st.session_state['app_data'] is not None:
-            data_to_display = st.session_state['app_data']
-        else:
-            st.write("No data available. Please select an application and download reviews.")
-            data_to_display = None
+                st.image(st.session_state['selected_app_icon'], use_container_width=True)
 
-        if data_to_display is not None:
-            # Filter data based on selected date range and scores
-            final_filtered_data = data_to_display[
-                (data_to_display['at'] >= st.session_state['selected_date_range'][0]) &
-                (data_to_display['at'] <= st.session_state['selected_date_range'][1]) &
-                (data_to_display['score'].isin(st.session_state['selected_scores']))
+        st.header("Problems Identification")
+
+        # Fetch data from the database
+        if selected_app:
+            app_data = get_app_data(conn, selected_app)
+            if not app_data.empty:
+                app_data = preprocess_data(app_data)
+                app_data['at'] = pd.to_datetime(app_data['at']).dt.date
+                st.session_state['app_data'] = app_data
+            else:
+                st.write("No data available. Please select an application and download reviews.")
+                st.session_state['app_data'] = None
+
+        # Proceed if data is available
+        if 'app_data' in st.session_state and st.session_state['app_data'] is not None:
+            app_data = st.session_state['app_data']
+
+            # Apply filters based on date range and scores
+            final_filtered_data = app_data[
+                (app_data['at'] >= st.session_state['selected_date_range'][0]) &
+                (app_data['at'] <= st.session_state['selected_date_range'][1]) &
+                (app_data['score'].isin(st.session_state['selected_scores']))
             ]
 
             if not final_filtered_data.empty:
@@ -655,10 +657,8 @@ def app_analysis_page():
                     if keyword_count > 0:
                         st.write(f"### Comments containing the keyword '{problem_keyword}':")
                         st.dataframe(keyword_comments[['content']].reset_index(drop=True), use_container_width=True)
-                    else:
-                        st.write(f"No comments contain the keyword '{problem_keyword}'.")
 
-                # Generate n-grams for each row and store them with row index
+                # Generate n-grams for each row and store them
                 st.header("Most Frequent Words and Phrases")
                 ngram_length = st.selectbox("Select phrase length:", [1, 2, 3, 4], index=0)
 
@@ -702,23 +702,20 @@ def app_analysis_page():
                         matching_rows = [
                             row_index for row_index, ngram in ngram_to_row_mapping if ngram == selected_phrase
                         ]
-                        related_comments = final_filtered_data.loc[matching_rows, ['content']]
+                        related_comments = final_filtered_data.loc[matching_rows, ['content', 'score', 'at', 'user_name']]
 
                         if not related_comments.empty:
                             st.dataframe(related_comments.reset_index(drop=True), use_container_width=True)
                         else:
                             st.write(f"No comments contain the phrase: **{selected_phrase}**")
 
-                else:
-                    st.write(f"No {ngram_length}-word phrases found.")
-
+                # Word Cloud
                 # Define a custom colormap with vibrant colors
                 colors = ["#FF66C4", "#FF66C4", "#cbd5e8", "#2196F3", "#2E2E2E"]
                 custom_cmap = LinearSegmentedColormap.from_list("custom_palette", colors)
 
-                # Generate and display word cloud for all content
                 st.header("Word Cloud")
-                all_cleaned_text = ' '.join(final_filtered_data['content'].apply(preprocess_text_simple))
+                all_cleaned_text = ' '.join(final_filtered_data['cleaned_content'])
                 wordcloud = WordCloud(width=800, height=400, background_color='white', colormap=custom_cmap).generate(all_cleaned_text)
 
                 fig, ax = plt.subplots(figsize=(10, 5))
@@ -728,10 +725,8 @@ def app_analysis_page():
 
             else:
                 st.write("No data available after applying these filters.")
-
         else:
             st.write("No data available. Please download reviews first.")
-
 
 
     conn.close()
