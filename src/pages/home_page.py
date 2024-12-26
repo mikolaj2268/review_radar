@@ -20,7 +20,7 @@
 import streamlit as st
 from PIL import Image
 
-from src.functions.gui import create_st_button, get_file_path
+from src.functions.gui import create_st_button, get_file_path, create_st_button_with_color
 
 st.set_page_config(page_title="Review Radar", layout="wide")
 
@@ -33,7 +33,7 @@ def home_page():
             "Google Play API": "https://developers.google.com/android-publisher",
         }
         for link_text, link_url in database_link_dict.items():
-            create_st_button(link_text, link_url, st_col=st.sidebar)
+            create_st_button_with_color(link_text, link_url, st_col=st.sidebar)
 
         st.markdown("## Models used to analyze sentiment")
         # Removed Pandas and NumPy, added model links
@@ -44,7 +44,7 @@ def home_page():
             "RoBERTa Model": "https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment-latest?text=Covid+cases+are+increasing+fast%21"
         }
         for link_text, link_url in software_link_dict.items():
-            create_st_button(link_text, link_url, st_col=st.sidebar)
+            create_st_button_with_color(link_text, link_url, st_col=st.sidebar)
 
     # Main content
     left_col, right_col = st.columns(2)  # 30% for image, 70% for text
@@ -117,17 +117,19 @@ def home_page():
 
     st.markdown("---")
 
-    st.markdown(
-        """
-        ## Authors
-        **Mikołaj Mróz**
-        - GitHub: [mikolaj2268](https://github.com/mikolaj2268)
-        - Email: <mikolaj2268@gmail.com>\n
-        **Michał Binda**
-        - GitHub: [michal1701](https://github.com/michal1701)
-        - Email: <mich.binda@gmail.com>
-        """
-    )
+    # Sekcja autorów
+    st.markdown("## Authors")
+
+    # Mikołaj Mróz
+    st.markdown("**Mikołaj Mróz**")
+    create_st_button_with_color("GitHub: mikolaj2268", "https://github.com/mikolaj2268")
+    create_st_button_with_color("Email: mikolaj2268@gmail.com", "mailto:mikolaj2268@gmail.com")
+    st.write("")  # Dodanie przerwy
+
+    # Michał Binda
+    st.markdown("**Michał Binda**")
+    create_st_button_with_color("GitHub: michal1701", "https://github.com/michal1701")
+    create_st_button_with_color("Email: mich.binda@gmail.com", "mailto:mich.binda@gmail.com")
 
 
 
