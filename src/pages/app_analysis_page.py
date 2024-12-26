@@ -499,6 +499,14 @@ def app_analysis_page():
     with tabs[2]:
         # Display the logo at the top-right corner
         cols = st.columns([0.9, 0.1])
+        date_range_str = f"{st.session_state['selected_date_range'][0]} to {st.session_state['selected_date_range'][1]}"
+        with cols[0]:
+            st.title(selected_app)
+            # Display date range and model name
+            st.markdown(
+                f"<p style='font-size:20px; font-weight:bold;'>Date Range: {date_range_str}</p>",
+                unsafe_allow_html=True
+            )
         with cols[1]:
             if 'selected_app_icon' in st.session_state and st.session_state['selected_app_icon']:
                 st.image(
@@ -589,6 +597,14 @@ def app_analysis_page():
     with tabs[3]:
             # Display the logo at the top-right corner
         cols = st.columns([0.9, 0.1])
+        date_range_str = f"{st.session_state['selected_date_range'][0]} to {st.session_state['selected_date_range'][1]}"
+        with cols[0]:
+            st.title(selected_app)
+            # Display date range and model name
+            st.markdown(
+                f"<p style='font-size:20px; font-weight:bold;'>Date Range: {date_range_str}</p>",
+                unsafe_allow_html=True
+            )
         with cols[1]:
             if 'selected_app_icon' in st.session_state and st.session_state['selected_app_icon']:
                 st.image(
