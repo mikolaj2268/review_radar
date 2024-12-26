@@ -542,24 +542,46 @@ def app_analysis_page():
 
                 # Daily Average Rating Over Time
                 st.write("### Daily Average Rating Over Time")
+
+                # Group by date and compute the mean score
                 metrics_over_time = (
                     displayed_data
                     .groupby('at', as_index=False)['score']
                     .mean(numeric_only=True)
                 )
 
-                if not metrics_over_time.empty:
-                    fig_line = px.line(
-                        metrics_over_time,
-                        x='at',
-                        y='score',
-                        labels={'at': 'Date', 'score': 'Average Score'},
-                        title="Daily Average Rating Over Time"
-                    )
-                    fig_line.update_traces(line_color='#2196F3')
-                    fig_line.update_layout(yaxis=dict(range=[1, 5]))
-                    st.plotly_chart(fig_line)
+                # Convert data to long format for easier plotting
+                melted = metrics_over_time.melt(id_vars='at', value_vars=['score'], var_name='metric', value_name='value')
 
+                # Compute a 7-day moving average trend for the score
+                melted['trend'] = melted.groupby('metric')['value'].transform(lambda x: x.rolling(7, min_periods=1).mean())
+
+                # Create a line chart for the original score values
+                fig_line = px.line(
+                    melted,
+                    x='at',
+                    y='value',
+                    color='metric',
+                    title="Daily Average Rating Over Time",
+                    labels={'at': 'Date', 'value': 'Average Score'}
+                )
+
+                # Add the trend line as a dashed line
+                for metric in ['score']:
+                    metric_data = melted[melted['metric'] == metric]
+                    fig_line.add_trace(
+                        go.Scatter(
+                            x=metric_data['at'],
+                            y=metric_data['trend'],
+                            mode='lines',
+                            name=f'{metric} (Trend)',
+                            line=dict(dash='dash')
+                        )
+                    )
+
+                st.plotly_chart(fig_line)
+
+                if not metrics_over_time.empty:
                     # Calculate daily changes
                     metrics_over_time['Change'] = metrics_over_time['score'].diff()
 
