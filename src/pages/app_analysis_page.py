@@ -404,7 +404,11 @@ def app_analysis_page():
                             st.plotly_chart(fig)
 
                         st.write("### Average Sentiment Metrics Over Time")
-                        selected_metrics = st.multiselect("Select metrics to plot over time:", model_numeric_cols, default=model_numeric_cols)
+                        selected_metrics = st.multiselect(
+                            "Select metrics to plot over time (you can select additional metrics to compare them):",
+                            model_numeric_cols,
+                            default=model_numeric_cols[:1]
+                        )
                         if selected_metrics:
                             # Group by date and compute the mean for selected metrics
                             metrics_over_time = (
@@ -434,7 +438,7 @@ def app_analysis_page():
                                         y=metric_data['trend'],
                                         mode='lines',
                                         name=f'{metric} (Trend)',
-                                        line=dict(dash='dash')
+                                        line=dict(dash='dash', color='#FF66C4')
                                     )
                                 )
 
@@ -575,7 +579,7 @@ def app_analysis_page():
                             y=metric_data['trend'],
                             mode='lines',
                             name=f'{metric} (Trend)',
-                            line=dict(dash='dash')
+                            line=dict(dash='dash', color='#FF66C4')
                         )
                     )
 
