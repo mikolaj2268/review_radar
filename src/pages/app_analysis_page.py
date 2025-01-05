@@ -578,12 +578,20 @@ def app_analysis_page():
                             x=metric_data['at'],
                             y=metric_data['trend'],
                             mode='lines',
-                            name=f'{metric} (Trend)',
+                            name='Trend score*',
                             line=dict(dash='dash', color='#FF66C4')
                         )
                     )
 
                 st.plotly_chart(fig_line)
+
+                # Add description below the plot
+                st.write("""
+                **Description**:  
+                This plot shows the daily average rating of the app over time. Each point represents the average score on a given day, aggregated from user reviews.  
+
+                *The **trend line** represents a 7-day moving average of the daily scores, smoothing out short-term fluctuations to highlight the general trend over time.
+                """)
 
                 if not metrics_over_time.empty:
                     # Calculate daily changes
