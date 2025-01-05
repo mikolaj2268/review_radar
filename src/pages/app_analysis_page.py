@@ -210,19 +210,22 @@ def app_analysis_page():
         if st.session_state.analysis_result is not None and not st.session_state.analysis_result.empty:
             st.write(f"### Reviews for **{selected_app}**:")
             st.dataframe(st.session_state.analysis_result)
-        else:
-            st.write("No analysis performed yet or no reviews found for the selected date range.")
+        # else:
+        #     st.write("No analysis performed yet or no reviews found for the selected date range.")
 
 
     with tabs[1]:
         if selected_app:
             app_data = get_app_data(conn, selected_app)
+            if app_data.empty:
+                st.sidebar.write("No date slider means that there is no app data available. Please download it first via the 'Data Downloading' tab.")
             if not app_data.empty:
                 app_data = preprocess_data(app_data)
                 app_data['at'] = pd.to_datetime(app_data['at']).dt.date
 
                 # Date slider in sidebar
                 st.sidebar.write("Filter by Date:")
+                st.sidebar.write("Date range is selectable. It indicates that data is available for that period and can be analyzed. You can download additional data using the 'Data Downloading' tab.")
                 min_date = app_data['at'].min()
                 max_date = app_data['at'].max()
 
@@ -234,7 +237,7 @@ def app_analysis_page():
                         value=(min_date, max_date)
                     )
                 else:
-                    st.sidebar.warning("Not enough data to display the date range slider.")
+                    st.sidebar.warning("Not enough data to display the date range slider. This means there is no app data available. Please download it first via the 'Download reviews' button in the 'Data Downloading' tab.")
                     st.session_state['selected_date_range'] = (min_date, max_date)
 
                 analysis_data = st.session_state.get('analysis_data', None)
@@ -405,7 +408,7 @@ def app_analysis_page():
 
                         st.write("### Average Sentiment Metrics Over Time")
                         selected_metrics = st.multiselect(
-                            "Select metrics to plot over time (you can select additional metrics to compare them):",
+                            "Select metrics to plot over time (you can choose additional metrics to compare them):",
                             model_numeric_cols,
                             default=model_numeric_cols[:1]
                         )
