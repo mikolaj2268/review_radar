@@ -93,8 +93,7 @@ def change_logo_background(image_path, color):
     img_with_bg = Image.alpha_composite(bg, img)
     return img_with_bg
 
-# Streamlit app layout
-st.set_page_config(page_title="Enhanced Logo Ideas", layout="wide")
+
 
 # App title
 st.title("Enhanced Logo Display Ideas")

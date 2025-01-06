@@ -22,7 +22,7 @@ from PIL import Image
 
 from src.functions.gui import create_st_button, get_file_path, create_st_button_with_color
 
-st.set_page_config(page_title="Review Radar", layout="wide")
+
 
 def home_page():
     with st.sidebar:
