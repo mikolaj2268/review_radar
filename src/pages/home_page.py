@@ -30,7 +30,7 @@ def home_page():
         st.markdown("## Useful Links")
         database_link_dict = {
             "GitHub Repository": "https://github.com/mikolaj2268/review_radar",
-            "Google Play API": "https://developers.google.com/android-publisher",
+            # "Google Play API": "https://developers.google.com/android-publisher",
         }
         for link_text, link_url in database_link_dict.items():
             create_st_button_with_color(link_text, link_url, st_col=st.sidebar)
