@@ -267,6 +267,23 @@ def app_analysis_page():
 
                 st.write("### Select Sentiment Analysis Model")
                 model_options = ["TextBlob", "VADER", "DistilBERT", "RoBERTa"]
+                st.markdown("""
+                - **TextBlob**  
+                Speed: very fast  
+                Simple model based on basic NLP techniques; can analyze text with high throughput.
+
+                - **VADER**  
+                Speed: fast  
+                Lightweight and efficient model for short texts (e.g., tweets, comments).
+
+                - **DistilBERT**  
+                Speed: moderate  
+                A “distilled” version of BERT, more advanced than TextBlob or VADER.
+
+                - **RoBERTa**  
+                Speed: slowest  
+                An improved variant of BERT with very high accuracy, but also more computationally intensive.
+                """)
                 selected_model = st.radio("Available models:", model_options)
 
                 perform_analysis = st.button("Perform Analysis")
