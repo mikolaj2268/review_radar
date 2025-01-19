@@ -143,8 +143,6 @@ def preprocess_data(df, model=None, min_records=100, apply_lemmatization=True):
     # Validate input
     if df.empty:
         raise ValueError("The input DataFrame is empty. Please provide a valid DataFrame.")
-    if model not in [None, 'VADER', 'Transformers']:
-        raise ValueError("Invalid model specified. Use 'VADER' or 'Transformers'.")
 
     # Step 1: Drop unnecessary columns 
     columns_to_drop = ['c_name', 'user_image', 'reply_content', 'replied_at', 'review_created_version', 'review_id']

@@ -14,6 +14,7 @@ pd.set_option('display.max_columns', None)
 
 all_reviews = ' '.join(data['content'].dropna())
 
+
 # # Define a custom colormap with vibrant colors
 # colors = ["#FF66C4", "#FF66C4", "#4CAF50", "#2196F3", "#2E2E2E"]
 # custom_cmap = LinearSegmentedColormap.from_list("custom_palette", colors)
@@ -40,7 +41,16 @@ print(data.dtypes)
 
 print("\nLiczba unikalnych wartości w każdej kolumnie:")
 print(data.nunique())
+# what kind of unique values does app_name have?
+print("\nUnikalne wartości w kolumnie 'app_name':")
+print(data['app_name'].unique())
 
+# how many records are there?
+print("\nLiczba rekordów w zbiorze danych:", len(data))
+
+#what is the date range for this data?
+print("\nZakres dat w zbiorze danych:")
+print(data['at'].min(), data['at'].max())
 
 # Analiza brakujących wartości
 print("\nProcent brakujących wartości w każdej kolumnie:")
