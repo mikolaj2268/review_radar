@@ -19,7 +19,7 @@
 ## Introduction
 
 **Review Radar** is a comprehensive system designed to collect, analyze, and visualize user reviews from the Google Play Store. By leveraging advanced sentiment analysis models and efficient data management techniques, Review Radar provides insightful visualizations and reports that help developers understand user feedback, identify trends, and improve their applications.
-You can try the live application here: ![Review Radar](https://reviewradar.streamlit.app)
+You can try the live application here: [Review Radar](https://reviewradar.streamlit.app)
 
 
 ## Features
