@@ -104,3 +104,5 @@ secrets.json
 # Ignore database files
 google_play_reviews.db
 .DS_Store
+
+poetry.lock
