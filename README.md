@@ -54,7 +54,7 @@ You can try the live application here: [Review Radar](https://reviewradar.stream
 
 ### Prerequisites
 
-- Python 3.12 or higher
+- Python 3.12
 - Git
 
 ### Steps
