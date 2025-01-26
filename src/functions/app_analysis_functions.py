@@ -10,8 +10,6 @@ from src.database_connection.db_utils import (
     get_reviews_for_app
 )
 from src.functions.scraper import scrape_and_store_reviews
-# from symspellpy.symspellpy import SymSpell, Verbosity
-# import pkg_resources
 from collections import Counter
 import nltk
 from nltk.corpus import stopwords
@@ -42,14 +40,12 @@ def plot_daily_average_rating(data):
     Returns:
     - plotly.graph_objects.Figure: The generated line plot.
     """
-    # Ensure the 'at' column is in datetime format
+
     data['at'] = pd.to_datetime(data['at'])
 
-    # Group by date and calculate the mean score
     daily_avg_rating = data.groupby(data['at'].dt.date)['score'].mean().reset_index()
     daily_avg_rating.columns = ['Date', 'Average Score']
 
-    # Create the plot
     fig = px.line(
         daily_avg_rating,
         x="Date",
@@ -61,15 +57,15 @@ def plot_daily_average_rating(data):
     fig.update_layout(
         xaxis_title="Date",
         yaxis_title="Average Rating",
-        yaxis=dict(range=[1, 5])  # Assuming scores range between 1 and 5
+        yaxis=dict(range=[1, 5])
     )
 
     return fig
 
 def preprocess_text_simple(text):
-    stop_words = set(stopwords.words('english'))  # Load NLTK's stop words
-    words = word_tokenize(text.lower())  # Tokenize and lowercase
-    filtered_words = [word for word in words if word.isalnum() and word not in stop_words]  # Remove stop words and non-alphanumeric tokens
+    stop_words = set(stopwords.words('english'))
+    words = word_tokenize(text.lower())
+    filtered_words = [word for word in words if word.isalnum() and word not in stop_words]
     return ' '.join(filtered_words)
 
 def generate_ngrams(text, n):
@@ -140,30 +136,30 @@ def preprocess_data(df, model=None, min_records=100, apply_lemmatization=True):
     Returns:
     pd.DataFrame: The preprocessed DataFrame.
     """
-    # Validate input
+    
     if df.empty:
         raise ValueError("The input DataFrame is empty. Please provide a valid DataFrame.")
 
-    # Step 1: Drop unnecessary columns 
+    # Dropping unnecessary columns 
     columns_to_drop = ['c_name', 'user_image', 'reply_content', 'replied_at', 'review_created_version', 'review_id']
     df = df.drop(columns=[col for col in columns_to_drop if col in df.columns], errors='ignore')
 
-    # Step 2: Basic Cleanup and Null Handling
+    # Basic Cleanup and Null Handling
     df = df.drop_duplicates()
     df = df[(df['score'] >= 1) & (df['score'] <= 5)]
     df = df[df['content'].str.len() <= 500]
     for col in ['content', 'app_version']:
         df[col] = df[col].fillna('')
     
-    # Step 3: Date Parsing
+    # Date Parsing
     df['at'] = pd.to_datetime(df['at'], errors='coerce')
     df = df.dropna(subset=['at'])  # Remove rows with invalid dates
     df['date'] = df['at'].dt.date
 
-    # Step 4: Normalize Text
+    # Normalize Text
     df['content'] = df['content'].str.lower()
 
-    # Step 5: Optional Cleaning and Tokenization based on Model
+    # Optional Cleaning and Tokenization based on Model
     if model == 'VADER':
         df['clean_content'] = df['content'].str.replace(r'[^\w\s]', '', regex=True)
         
@@ -172,7 +168,7 @@ def preprocess_data(df, model=None, min_records=100, apply_lemmatization=True):
         df['tokens'] = df['content'].apply(lambda x: tokenizer.tokenize(x))
 
 
-    # Step 6: Handle Small Datasets
+    # Handle Small Datasets
     if len(df) < min_records:
         print(f"Warning: The dataset contains only {len(df)} records. Consider collecting more data.")
     
@@ -211,17 +207,16 @@ def check_and_fetch_reviews(conn, selected_app, selected_app_id, start_date, end
     status_placeholder: Streamlit placeholder for status messages.
     missing_placeholder: Streamlit placeholder for missing date ranges.
     """
-    # Get existing review dates for the app
+    
     existing_dates = get_reviews_date_ranges(conn, selected_app)
 
-    # Identify missing and available date ranges
+   
     missing_ranges = get_missing_and_available_ranges(existing_dates, start_date, end_date)
 
     if not missing_ranges['missing']:
         status_placeholder.success(f"Reviews for **{selected_app}** from {start_date} to {end_date} are up-to-date.")
     else:
         # Display missing date ranges
-        # status_placeholder.warning("Data is incomplete. Fetching missing reviews...")
         for missing_range in missing_ranges['missing']:
             missing_placeholder.info(f"- Missing: {missing_range[0]} to {missing_range[1]}")
 
@@ -254,15 +249,12 @@ def fetch_missing_reviews(conn, selected_app, selected_app_id, missing_ranges, s
             status_placeholder.warning("Download process stopped by user.")
             break
 
-        # Display fetching message
         fetch_placeholder = st.empty()
         fetch_placeholder.info(f"Fetching reviews from {start_date} to {end_date}...")
 
-        # Initialize progress bar and text placeholders for this range
         progress_bar = st.progress(0)
         progress_text = st.empty()
 
-        # Fetch reviews for this date range
         scrape_and_store_reviews(
             app_name=selected_app,
             app_id=selected_app_id,
@@ -275,7 +267,6 @@ def fetch_missing_reviews(conn, selected_app, selected_app_id, missing_ranges, s
             language="en",
         )
 
-        # Clear progress bar and text for this range
         progress_bar.empty()
         progress_text.empty()
         fetch_placeholder.empty()
@@ -299,11 +290,9 @@ def get_missing_and_available_ranges(existing_dates, start_date, end_date):
     missing_date_set = total_date_set - existing_dates
     available_date_set = existing_dates & total_date_set
 
-    # Convert date sets into sorted lists
     missing_dates = sorted(missing_date_set)
     available_dates = sorted(available_date_set)
 
-    # Convert dates into continuous ranges
     missing_ranges = dates_to_ranges(missing_dates)
     available_ranges = dates_to_ranges(available_dates)
 
