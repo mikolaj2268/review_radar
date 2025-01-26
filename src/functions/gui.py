@@ -39,22 +39,3 @@ def create_st_button_with_color(text, url, st_col=None):
         st_col.markdown(button_html, unsafe_allow_html=True)
     else:
         st.markdown(button_html, unsafe_allow_html=True)
-
-def get_file_path(file_name, dir_path="./data"):
-    """
-    Constructs the absolute path to a file given its name and a directory path.
-
-    Parameters:
-        file_name (str): The name of the file.
-        dir_path (str): The relative or absolute directory path where the file is located.
-
-    Returns:
-        str: The absolute file path.
-
-    Raises:
-        FileNotFoundError: If the file does not exist in the specified directory.
-    """
-    file_path = os.path.join(dir_path, file_name)
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"File '{file_name}' not found in directory '{dir_path}'.")
-    return file_path
