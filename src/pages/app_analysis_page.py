@@ -631,9 +631,9 @@ def app_analysis_page():
                                     max_growth['at'] if max_growth is not None else None,
                                     max_drop['at'] if max_drop is not None else None
                                 ],
-                                "Change in Average Score (%)": [
-                                    f"{max_growth['Change'] * 100:.2f}%" if max_growth is not None else None,
-                                    f"{max_drop['Change'] * 100:.2f}%" if max_drop is not None else None,
+                                "Change in Average Score": [
+                                    f"{max_growth['Change']:.2f}" if max_growth is not None else None,
+                                    f"{max_drop['Change']:.2f}" if max_drop is not None else None,
                                 ],
                             }
                         )
