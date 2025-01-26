@@ -207,8 +207,8 @@ def app_analysis_page():
         if st.session_state.analysis_result is not None and not st.session_state.analysis_result.empty:
             st.write(f"### Reviews for **{selected_app}**:")
             st.dataframe(st.session_state.analysis_result)
-        # else:
-        #     st.write("No analysis performed yet or no reviews found for the selected date range.")
+        else:
+            st.write("No analysis performed yet or no reviews found for the selected date range.")
 
 
     with tabs[1]:
