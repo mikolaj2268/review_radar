@@ -5,7 +5,6 @@ import pandas as pd
 import numpy as np
 import datetime
 
-# Import the functions to test
 from src.functions.app_analysis_functions import (
     preprocess_data,
     plot_score_distribution,
@@ -14,6 +13,7 @@ from src.functions.app_analysis_functions import (
 
 class TestAppAnalysisFunctions(unittest.TestCase):
     def setUp(self):
+
         # Sample data for testing
         self.sample_data = pd.DataFrame({
             'content': [
@@ -120,7 +120,6 @@ class TestAppAnalysisFunctions(unittest.TestCase):
         """
         Test the plot_score_distribution function.
         """
-        # Since plotting functions return a figure, we'll check the type
         fig = plot_score_distribution(self.sample_data)
         self.assertIsNotNone(fig, "Plot should not be None.")
         self.assertTrue(hasattr(fig, 'to_html'), "Plotly figure should have 'to_html' method.")
