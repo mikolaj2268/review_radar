@@ -20,7 +20,7 @@
 import streamlit as st
 from PIL import Image
 
-from src.functions.gui import create_st_button, get_file_path, create_st_button_with_color
+from src.functions.gui import create_st_button, create_st_button_with_color
 
 
 
