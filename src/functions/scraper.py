@@ -11,12 +11,10 @@ def select_app(app_name):
     try:
         search_results = search(app_name, n_hits=5, lang='en', country='us')
         
-        # Ensure search_results is a list
         if not isinstance(search_results, list):
             st.error(f"Unexpected response format when searching for '{app_name}'.")
             return []
         
-        # Filter out any None entries
         search_results = [app for app in search_results if app is not None]
         
         if not search_results:
@@ -36,7 +34,6 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
     """Scrapes reviews and stores them in the SQLite database with a progress bar based on date range."""
     cursor = conn.cursor()
 
-    # Ensure start_date and end_date are datetime objects
     if not isinstance(start_date, datetime):
         start_date = datetime.combine(start_date, datetime.min.time())
     if not isinstance(end_date, datetime):
@@ -50,10 +47,9 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
     total_reviews_fetched = 0
     continuation_token = None
 
-    # Calculate total seconds in the date range
-    total_seconds = (end_date - start_date).total_seconds() or 1  # Prevent division by zero
+    total_seconds = (end_date - start_date).total_seconds() or 1
 
-    oldest_review_date_fetched = end_date  # Initialize with end_date
+    oldest_review_date_fetched = end_date
 
     while True:
         if st.session_state.get('stop_download'):
@@ -101,7 +97,7 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
 
         # Calculate progress based on the date range
         elapsed_seconds = (end_date - oldest_review_date_fetched).total_seconds()
-        progress = min(max(elapsed_seconds / total_seconds, 0), 1)  # Ensure progress is between 0 and 1
+        progress = min(max(elapsed_seconds / total_seconds, 0), 1)
 
         # Update progress bar and text
         if progress_bar is not None and progress_text is not None:
@@ -126,7 +122,7 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
             if field in reviews_df.columns:
                 reviews_df[field] = reviews_df[field].apply(lambda x: x.isoformat() if x is not None else None)
 
-        # Prepare the SQL statement with '?' placeholders
+        # Prepare the SQL statement
         insert_query = '''
             INSERT INTO app_reviews (
                 review_id, user_name, user_image, content, score, thumbs_up_count,
@@ -146,9 +142,9 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
                 row['score'],
                 row['thumbsUpCount'],
                 row.get('reviewCreatedVersion', None),
-                row['at'],  # Converted to string
+                row['at'],
                 row.get('replyContent', None),
-                row.get('repliedAt', None),  # Converted to string
+                row.get('repliedAt', None),
                 row.get('appVersion', None),
                 app_name,
                 country,
@@ -164,8 +160,7 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
             break
 
     cursor.close()
-
-    # Final progress message
+    
     if progress_bar is not None and progress_text is not None:
         progress_bar.progress(1.0)
         if st.session_state.get('stop_download'):
