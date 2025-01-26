@@ -751,9 +751,9 @@ def app_analysis_page():
                         st.write(f"### Comments containing the phrase: **{selected_phrase}**")
 
                         # Find the rows containing the selected phrase
-                        matching_rows = [
+                        matching_rows = list(set(
                             row_index for row_index, ngram in ngram_to_row_mapping if ngram == selected_phrase
-                        ]
+                        ))
                         related_comments = final_filtered_data.loc[matching_rows, ['content', 'score', 'at', 'user_name']]
 
                         if not related_comments.empty:
