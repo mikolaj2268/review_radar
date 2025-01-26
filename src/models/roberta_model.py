@@ -24,7 +24,7 @@ classifier = pipeline(
     'sentiment-analysis',
     model='cardiffnlp/twitter-roberta-base-sentiment',
     tokenizer='cardiffnlp/twitter-roberta-base-sentiment',
-    device=0 if device.type == 'cuda' else -1  # Note: 'mps' is not directly supported
+    device=0 if device.type == 'cuda' else -1
 )
 
 LABEL_MAPPING = {
