@@ -683,6 +683,7 @@ def app_analysis_page():
             ]
 
             if not final_filtered_data.empty:
+                final_filtered_data = final_filtered_data.drop_duplicates(subset=['content'])
                 # Preprocess text data for each row and store it in a new column
                 final_filtered_data['cleaned_content'] = final_filtered_data['content'].apply(preprocess_text_simple)
 
