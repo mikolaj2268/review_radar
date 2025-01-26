@@ -1,5 +1,9 @@
 # src/functions/sentiment_analysis.py
 
+from src.models.textblob_model import analyze_sentiment_textblob
+from src.models.vader_model import analyze_sentiment_vader
+from src.models.roberta_model import analyze_sentiment_roberta
+from src.models.distilbert_model import analyze_sentiment_distilbert
 import nltk
 try:
     nltk.data.find('tokenizers/punkt')
@@ -18,10 +22,6 @@ try:
 except LookupError:
     nltk.download('wordnet')
 
-from src.models.textblob_model import analyze_sentiment_textblob
-from src.models.vader_model import analyze_sentiment_vader
-from src.models.roberta_model import analyze_sentiment_roberta
-from src.models.distilbert_model import analyze_sentiment_distilbert
 
 def perform_sentiment_analysis(text, model_name):
     """
