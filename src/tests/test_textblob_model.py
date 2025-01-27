@@ -1,5 +1,3 @@
-# tests/test_textblob_model.py
-
 import unittest
 from src.models.textblob_model import analyze_sentiment_textblob
 
@@ -23,17 +21,15 @@ class TestTextBlobModel(unittest.TestCase):
         text = "This app is terrible and I hate it."
         result = analyze_sentiment_textblob(text)
         
-        # Assert that the sentiment label is 'Negative'
         self.assertEqual(result.get('textblob_sentiment_label'), 'Negative', "Should correctly identify negative sentiment.")
         
-        # Assert that the polarity is negative
         self.assertLess(result.get('textblob_polarity', 0), 0, "Polarity should be negative.")
 
     def test_analyze_sentiment_textblob_error(self):
         """
         Test the analyze_sentiment_textblob function handling errors.
         """
-        text = None  # Passing None to cause an exception
+        text = None
         result = analyze_sentiment_textblob(text)
         expected_result = {
             'textblob_sentiment_label': 'Error',

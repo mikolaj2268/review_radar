@@ -1,5 +1,3 @@
-# tests/test_app_analysis_page.py
-
 import unittest
 from unittest.mock import patch, MagicMock
 import pandas as pd

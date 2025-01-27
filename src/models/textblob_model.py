@@ -1,5 +1,3 @@
-# src/models/textblob_model.py
-
 from textblob import TextBlob
 
 def analyze_sentiment_textblob(text):

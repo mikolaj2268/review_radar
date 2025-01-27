@@ -1,5 +1,3 @@
-# src/models/distilbert_model.py
-
 import torch
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
 import logging

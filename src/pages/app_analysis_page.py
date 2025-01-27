@@ -1,5 +1,3 @@
-# src/pages/app_analysis_page.py
-
 import pandas as pd
 import plotly.express as px
 import streamlit as st

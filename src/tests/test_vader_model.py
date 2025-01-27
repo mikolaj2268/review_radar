@@ -1,5 +1,3 @@
-# tests/test_vader_model.py
-
 import unittest
 from unittest.mock import patch
 from src.models.vader_model import analyze_sentiment_vader
@@ -10,7 +8,6 @@ class TestVaderModel(unittest.TestCase):
         """
         Test the analyze_sentiment_vader function with positive sentiment.
         """
-        # Mock analyzer behavior
         mock_analyzer.polarity_scores.return_value = {
             'neg': 0.0,
             'neu': 0.5,
@@ -36,7 +33,6 @@ class TestVaderModel(unittest.TestCase):
         """
         Test the analyze_sentiment_vader function with negative sentiment.
         """
-        # Mock analyzer behavior
         mock_analyzer.polarity_scores.return_value = {
             'neg': 0.6,
             'neu': 0.3,
@@ -62,7 +58,6 @@ class TestVaderModel(unittest.TestCase):
         """
         Test the analyze_sentiment_vader function with neutral sentiment.
         """
-        # Mock analyzer behavior
         mock_analyzer.polarity_scores.return_value = {
             'neg': 0.2,
             'neu': 0.6,
@@ -88,7 +83,6 @@ class TestVaderModel(unittest.TestCase):
         """
         Test the analyze_sentiment_vader function handling errors.
         """
-        # Mock analyzer to raise an exception
         mock_analyzer.polarity_scores.side_effect = Exception("Analyzer error")
 
         text = "This should cause an error."

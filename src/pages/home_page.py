@@ -1,21 +1,3 @@
-"""
-  ReviewRadar Application
-  Created by Mikołaj Mroz and Michał Binda
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
-"""
-
 import streamlit as st
 from PIL import Image
 
@@ -118,7 +100,7 @@ def home_page():
     st.markdown("**Mikołaj Mróz**")
     create_st_button_with_color("GitHub: mikolaj2268", "https://github.com/mikolaj2268")
     create_st_button_with_color("Email: mikolaj2268@gmail.com", "mailto:mikolaj2268@gmail.com")
-    st.write("")  # Dodanie przerwy
+    st.write("")
 
     st.markdown("**Michał Binda**")
     create_st_button_with_color("GitHub: michal1701", "https://github.com/michal1701")
