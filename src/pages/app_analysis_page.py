@@ -145,7 +145,7 @@ def app_analysis_page():
             st.session_state.app_data = None  
 
         if selected_app and selected_app_id:
-            # Handle downloading reviews
+            
             if perform_analysis_button:
                 st.session_state.stop_download = False
 
@@ -194,7 +194,7 @@ def app_analysis_page():
         elif perform_analysis_button or stop_download_button:
             st.warning("Please select an application before proceeding.")
 
-        # Display analysis results if available
+        # Display analysis results
         if st.session_state.analysis_result is not None and not st.session_state.analysis_result.empty:
             st.write(f"### Reviews for **{selected_app}**:")
             st.dataframe(st.session_state.analysis_result)
@@ -249,7 +249,7 @@ def app_analysis_page():
                     5: st.sidebar.checkbox("5 Stars", value=5 in st.session_state['selected_scores']),
                 }
 
-                # Update session state with selected scores
+                # Update session state
                 st.session_state['selected_scores'] = [score for score, selected in score_filters.items() if selected]
 
                 st.write("### Select Sentiment Analysis Model")
@@ -324,7 +324,7 @@ def app_analysis_page():
                             sentiments = run_sentiment_analysis(model_function, selected_model)
                             sentiment_df = pd.DataFrame(sentiments)
 
-                            # Before concatenation, remove duplicate columns
+                            # remove duplicate columns
                             for col in sentiment_df.columns:
                                 if col in final_filtered_data.columns:
                                     final_filtered_data.drop(columns=col, inplace=True)
@@ -366,7 +366,7 @@ def app_analysis_page():
                         cols = st.columns([0.9, 0.1])
                         with cols[0]:
                             st.title(selected_app)
-                            # Display date range and model name
+                            
                             st.markdown(
                                 f"<p style='font-size:20px; font-weight:bold;'>Date Range: {date_range_str}<br>Model: {selected_model}</p>",
                                 unsafe_allow_html=True
@@ -416,7 +416,7 @@ def app_analysis_page():
                             default=model_numeric_cols[:1]
                         )
                         if selected_metrics:
-                            # Group by date and compute the mean for selected metrics
+                            
                             metrics_over_time = (
                                 displayed_data
                                 .groupby('at', as_index=False)[selected_metrics]
@@ -447,9 +447,8 @@ def app_analysis_page():
                         else:
                             st.write("No numeric metrics selected to plot.")
                         
-                        # Determine best/worst comments logic based on model
+                        # Determine best/worst comments
                         if selected_model == "TextBlob":
-                            # For TextBlob: best = highest textblob_polarity, worst = lowest textblob_polarity
                             if 'textblob_polarity' in displayed_data.columns:
                                 best_10 = displayed_data.sort_values(by='textblob_polarity', ascending=False).head(10)
                                 worst_10 = displayed_data.sort_values(by='textblob_polarity', ascending=True).head(10)
@@ -457,7 +456,6 @@ def app_analysis_page():
                                 best_10 = None
                                 worst_10 = None
                         else:
-                            # For other models
                             if selected_model == "VADER":
                                 col_positive = 'vader_positive'
                                 col_negative = 'vader_negative'
@@ -472,9 +470,9 @@ def app_analysis_page():
                                 col_negative = None
 
                             if col_positive and col_negative and col_positive in displayed_data.columns and col_negative in displayed_data.columns:
-                                # Best comments: highest positive, then lowest negative
+                                
                                 best_10 = displayed_data.sort_values(by=[col_positive, col_negative], ascending=[False, True]).head(10)
-                                # Worst comments: highest negative, then lowest positive
+                                
                                 worst_10 = displayed_data.sort_values(by=[col_negative, col_positive], ascending=[False, True]).head(10)
                             else:
                                 best_10 = None
@@ -482,7 +480,7 @@ def app_analysis_page():
 
                         st.write("### Top 10 Best Comments")
                         if best_10 is not None and not best_10.empty:
-                            # Show all metrics related to the chosen model plus content
+                            # Show all metrics
                             metrics_cols = [c for c in best_10.columns if c.startswith(selected_model.lower())]
                             st.dataframe(best_10[['content'] + metrics_cols])
                         else:
@@ -545,7 +543,7 @@ def app_analysis_page():
                 st.plotly_chart(score_fig)
                 st.write("### Daily Average Rating Over Time")
 
-                # Group by date and compute the mean score
+                # Group by date
                 metrics_over_time = (
                     displayed_data
                     .groupby('at', as_index=False)['score']
@@ -623,7 +621,7 @@ def app_analysis_page():
             st.write("No data available. Please download reviews first.")
 
     with tabs[3]:
-        # Display the logo and app name
+        # Display the logo
         cols = st.columns([0.9, 0.1])
         date_range_str = f"{st.session_state['selected_date_range'][0]} to {st.session_state['selected_date_range'][1]}"
         with cols[0]:
