@@ -3,7 +3,6 @@ from unittest.mock import patch, MagicMock
 import pandas as pd
 import datetime
 
-# Import the module and functions to test
 from src.pages.app_analysis_page import (
     app_analysis_page,
     display_reviews,
@@ -13,7 +12,6 @@ from src.pages.app_analysis_page import (
 class TestAppAnalysisPage(unittest.TestCase):
     def setUp(self):
 
-        # Sample DataFrame for testing
         self.sample_reviews = pd.DataFrame({
             'review_id': ['1', '2', '3'],
             'user_name': ['User1', 'User2', 'User3'],
@@ -51,36 +49,28 @@ class TestAppAnalysisPage(unittest.TestCase):
         """
         Test that app_analysis_page function can be called without errors.
         """
-        # Mock the database connection
         mock_conn = MagicMock()
         mock_get_db_connection.return_value = mock_conn
 
-        # Mock the display_reviews function to return sample reviews
         mock_display_reviews.return_value = self.sample_reviews
 
-        # Mock the search_and_select_app function to return a list with 'TestApp (ID: test123)'
         mock_search_and_select_app.return_value = [
             {'title': 'TestApp', 'appId': 'test123', 'icon': 'testapp_icon.png'}
         ]
 
-        # Mock Streamlit sidebar inputs
         mock_st.sidebar.text_input.return_value = 'TestApp'
         mock_st.sidebar.selectbox.return_value = 'TestApp (ID: test123)'
-        mock_st.button.return_value = True  # Simulate button press
+        mock_st.button.return_value = True
 
-        # Mock date_input to return specific dates for start and end
         mock_st.date_input.side_effect = [
             datetime.date(2023, 11, 1),  
             datetime.date(2023, 11, 30)
         ]
 
-        # Initialize st.session_state as a MagicMock
         mock_st.session_state = MagicMock()
 
-        # Internal storage for session state
         session_state_storage = {}
 
-        # Define side effects for get and set operations
         def session_state_getitem(key):
             return session_state_storage.get(key, None)
 
@@ -104,7 +94,7 @@ class TestAppAnalysisPage(unittest.TestCase):
 
         self.assertTrue(success, "app_analysis_page should run without errors")
 
-    @patch('src.pages.app_analysis_page.st')  # Patch Streamlit
+    @patch('src.pages.app_analysis_page.st')
     def test_preprocess_data(self, mock_st):
         """
         Test the preprocess_data function within app_analysis_page.
@@ -112,10 +102,8 @@ class TestAppAnalysisPage(unittest.TestCase):
        
         processed_data = preprocess_data(self.sample_reviews)
 
-        # Check that 'content_length' is added
         self.assertIn('content_length', processed_data.columns, "'content_length' should be added to the DataFrame.")
 
-        # Check that 'content_length' values are correct
         expected_lengths = self.sample_reviews['content'].str.len()
         pd.testing.assert_series_equal(
             processed_data['content_length'],
