@@ -9,7 +9,7 @@ PAGES = {
 }
 
 def main():
-    # custom CSS for the background color
+
     st.markdown(
         """
         <style>
@@ -21,7 +21,6 @@ def main():
         unsafe_allow_html=True
     )
 
-    # Insert logo at the top of the sidebar
     logo_path = "assets/images/1-rm-bg-white.png"
     st.sidebar.image(logo_path, use_container_width=True)
 
