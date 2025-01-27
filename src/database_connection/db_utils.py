@@ -1,5 +1,3 @@
-# src/database_connection/db_utils.py
-
 import sqlite3
 import pandas as pd
 import os

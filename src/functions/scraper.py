@@ -1,5 +1,3 @@
-# src/functions/scraper.py
-
 import sqlite3
 import pandas as pd
 from google_play_scraper import Sort, reviews, search

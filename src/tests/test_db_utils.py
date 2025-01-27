@@ -1,5 +1,3 @@
-# tests/test_db_utils.py
-
 import unittest
 import sqlite3
 import pandas as pd

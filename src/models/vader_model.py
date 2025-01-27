@@ -1,5 +1,3 @@
-# src/models/vader_model.py
-
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 analyzer = SentimentIntensityAnalyzer()

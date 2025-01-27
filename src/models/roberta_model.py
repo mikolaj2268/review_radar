@@ -1,5 +1,3 @@
-# src/models/roberta_model.py
-
 import torch
 from transformers import pipeline
 import logging
