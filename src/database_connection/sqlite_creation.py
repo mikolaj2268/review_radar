@@ -1,9 +1,7 @@
 import sqlite3
 
-# Path for the new database
 new_db_path = "google_play_reviews_empty.db"
 
-# SQL statement to create the app_reviews table
 create_table_query = """
 CREATE TABLE IF NOT EXISTS app_reviews (
     review_id TEXT PRIMARY KEY,
@@ -23,16 +21,13 @@ CREATE TABLE IF NOT EXISTS app_reviews (
 );
 """
 
-# Create the new database and table
 def create_empty_database(db_path, create_query):
-    # Connect to the new database
+
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    # Execute the query to create the table
     cursor.execute(create_query)
 
-    # Commit and close the connection
     conn.commit()
     conn.close()
 
