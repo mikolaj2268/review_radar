@@ -72,51 +72,39 @@ def scrape_and_store_reviews(app_name, app_id, conn, progress_bar=None, progress
         if not new_reviews:
             break
 
-        # Filter reviews within the date range
         new_reviews_in_range = [review for review in new_reviews if start_date <= review['at'] <= end_date]
 
-        # Check if no reviews are in the desired date range
         if not new_reviews_in_range:
-            # Check if new_reviews is non-empty before accessing
             if new_reviews and new_reviews[-1]['at'] < start_date:
                 break
             elif not new_reviews:
-                # If new_reviews is empty, no more reviews to fetch
                 break
             else:
-                # Continue to next batch
                 continue
 
-        # Add all reviews in range to the total count
         total_reviews_fetched += len(new_reviews_in_range)
 
-        # Update oldest_review_date_fetched
         oldest_review_date_in_batch = new_reviews_in_range[-1]['at']
         if oldest_review_date_in_batch < oldest_review_date_fetched:
             oldest_review_date_fetched = oldest_review_date_in_batch
 
-        # Calculate progress based on the date range
         elapsed_seconds = (end_date - oldest_review_date_fetched).total_seconds()
         progress = min(max(elapsed_seconds / total_seconds, 0), 1)
 
-        # Update progress bar and text
         if progress_bar is not None and progress_text is not None:
             progress_bar.progress(progress)
             progress_text.write(f"**{app_name}: Fetched {total_reviews_fetched} reviews so far...** Progress: {progress*100:.2f}%")
 
-        # Prepare DataFrame
         reviews_df = pd.DataFrame(new_reviews_in_range)
         reviews_df['app_name'] = app_name
         reviews_df['country'] = country
         reviews_df['language'] = language
 
-        # Replace NaT and NaN values with None
         reviews_df = reviews_df.replace({pd.NaT: None})
         reviews_df = reviews_df.where(pd.notnull(reviews_df), None)
 
         reviews_df['at'] = pd.to_datetime(reviews_df['at']).dt.date
 
-        # Convert datetime fields to strings
         datetime_fields = ['at', 'repliedAt']
         for field in datetime_fields:
             if field in reviews_df.columns:

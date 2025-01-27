@@ -14,6 +14,7 @@ from src.pages.app_analysis_page import (
 
 class TestAppAnalysisPage(unittest.TestCase):
     def setUp(self):
+
         # Sample DataFrame for testing
         self.sample_reviews = pd.DataFrame({
             'review_id': ['1', '2', '3'],
@@ -36,18 +37,18 @@ class TestAppAnalysisPage(unittest.TestCase):
             'language': ['en', 'en', 'en']
         })
 
-    @patch('src.pages.app_analysis_page.search_and_select_app')  # Patch search_and_select_app
-    @patch('src.pages.app_analysis_page.display_reviews')        # Patch display_reviews
-    @patch('src.pages.app_analysis_page.create_tables')          # Patch create_tables
-    @patch('src.pages.app_analysis_page.get_db_connection')      # Patch get_db_connection
-    @patch('src.pages.app_analysis_page.st')                     # Patch Streamlit
+    @patch('src.pages.app_analysis_page.search_and_select_app')
+    @patch('src.pages.app_analysis_page.display_reviews')
+    @patch('src.pages.app_analysis_page.create_tables')
+    @patch('src.pages.app_analysis_page.get_db_connection')
+    @patch('src.pages.app_analysis_page.st')
     def test_app_analysis_page_runs(
         self,
-        mock_st,                       # Mock for 'st'
-        mock_get_db_connection,        # Mock for 'get_db_connection'
-        mock_create_tables,            # Mock for 'create_tables'
-        mock_display_reviews,          # Mock for 'display_reviews'
-        mock_search_and_select_app     # Mock for 'search_and_select_app'
+        mock_st,                    
+        mock_get_db_connection,       
+        mock_create_tables,            
+        mock_display_reviews,       
+        mock_search_and_select_app    
     ):
         """
         Test that app_analysis_page function can be called without errors.
@@ -71,8 +72,8 @@ class TestAppAnalysisPage(unittest.TestCase):
 
         # Mock date_input to return specific dates for start and end
         mock_st.date_input.side_effect = [
-            datetime.date(2023, 11, 1),    # start_date_input
-            datetime.date(2023, 11, 30)    # end_date_input
+            datetime.date(2023, 11, 1),  
+            datetime.date(2023, 11, 30)
         ]
 
         # Initialize st.session_state as a MagicMock
@@ -110,7 +111,7 @@ class TestAppAnalysisPage(unittest.TestCase):
         """
         Test the preprocess_data function within app_analysis_page.
         """
-        # Assume the preprocess_data function is the same as in app_analysis_functions.py
+       
         processed_data = preprocess_data(self.sample_reviews)
 
         # Check that 'content_length' is added

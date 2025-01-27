@@ -22,7 +22,7 @@ class TestDistilBERTModel(unittest.TestCase):
         }
 
         # Mock model to return logits with higher positive score
-        mock_logits = torch.tensor([[-1.0, 1.0]])  # Logits for [Negative, Positive]
+        mock_logits = torch.tensor([[-1.0, 1.0]]) 
         mock_outputs = MagicMock()
         mock_outputs.logits = mock_logits
         mock_model.return_value = mock_outputs
@@ -70,7 +70,7 @@ class TestDistilBERTModel(unittest.TestCase):
         }
 
         # Mock model to return logits with higher negative score
-        mock_logits = torch.tensor([[1.0, -1.0]])  # Logits for [Negative, Positive]
+        mock_logits = torch.tensor([[1.0, -1.0]])
         mock_outputs = MagicMock()
         mock_outputs.logits = mock_logits
         mock_model.return_value = mock_outputs
