@@ -27,7 +27,6 @@ from src.functions.app_analysis_functions import (
 )
 from src.database_connection.db_utils import get_app_data
 
-# Import sentiment analysis functions from model files
 from src.models.textblob_model import analyze_sentiment_textblob
 from src.models.vader_model import analyze_sentiment_vader
 from src.models.roberta_model import analyze_sentiment_roberta
@@ -110,13 +109,12 @@ def app_analysis_page():
 
         # Initialize session variables for selected scores
         if 'selected_scores' not in st.session_state:
-            st.session_state['selected_scores'] = [1, 2, 3, 4, 5]  # Default to all scores selected
+            st.session_state['selected_scores'] = [1, 2, 3, 4, 5]  
 
         # Reset selected_scores if a new app is selected
         if st.session_state['last_selected_app'] != selected_app_id:
-            st.session_state['selected_scores'] = [1, 2, 3, 4, 5]  # Reset to default when a new app is selected
+            st.session_state['selected_scores'] = [1, 2, 3, 4, 5]  
 
-    # Define tabs
     tabs = st.tabs(["Data Downloading", "Sentiment Analysis", "Score Analysis", "Problems Identification"])
 
     with tabs[0]:
@@ -133,8 +131,6 @@ def app_analysis_page():
         )
 
         st.session_state['selected_date_range'] = (start_date_input, end_date_input)
-
-        # Convert dates to datetime objects
         start_date = datetime.combine(start_date_input, datetime.min.time())
         end_date = datetime.combine(end_date_input, datetime.max.time())
 
@@ -155,11 +151,9 @@ def app_analysis_page():
             if perform_analysis_button:
                 st.session_state.stop_download = False
 
-                # Define placeholders for messages
                 status_placeholder = st.empty()
                 missing_placeholder = st.empty()
 
-                # Check and fetch missing reviews
                 check_and_fetch_reviews(
                     conn,
                     selected_app,
@@ -175,7 +169,7 @@ def app_analysis_page():
                 if not app_data.empty:
                     app_data = preprocess_data(app_data)
                     app_data['at'] = pd.to_datetime(app_data['at']).dt.date
-                    st.session_state.app_data = app_data  # Update raw preprocessed data
+                    st.session_state.app_data = app_data  
                     st.write(f"### Fetched Data for **{selected_app}**:")
                     st.dataframe(app_data)
                 else:
@@ -191,8 +185,7 @@ def app_analysis_page():
                 if not app_data.empty:
                     app_data = preprocess_data(app_data)
                     app_data['at'] = pd.to_datetime(app_data['at']).dt.date
-                    st.session_state.app_data = app_data  # Update raw preprocessed data
-                     # Save app icon in session state
+                    st.session_state.app_data = app_data 
                     st.session_state['selected_app_icon'] = chosen_app.get('icon', None)
                     st.write(f"### Fetched Data for **{selected_app}**:")
                     st.dataframe(app_data)
@@ -242,13 +235,12 @@ def app_analysis_page():
 
                 can_filter_existing = False
                 if analysis_data is not None and analyzed_date_range is not None:
-                    # Check if selected_date_range is within analyzed_date_range
                     if st.session_state['selected_date_range'][0] >= analyzed_date_range[0] and st.session_state['selected_date_range'][1] <= analyzed_date_range[1]:
                         can_filter_existing = True
 
                 # Sidebar Filters for Scores
                 if 'selected_scores' not in st.session_state:
-                    st.session_state['selected_scores'] = [1, 2, 3, 4, 5]  # Default to all scores selected
+                    st.session_state['selected_scores'] = [1, 2, 3, 4, 5] 
 
                 st.sidebar.write("Filter by Scores:")
                 score_filters = {
@@ -331,7 +323,6 @@ def app_analysis_page():
                         if selected_model in model_functions:
                             model_function = model_functions[selected_model]
 
-                            # Run sentiment analysis
                             sentiments = run_sentiment_analysis(model_function, selected_model)
                             sentiment_df = pd.DataFrame(sentiments)
 
@@ -434,16 +425,11 @@ def app_analysis_page():
                                 .mean(numeric_only=True)
                             )
 
-                            # Rename 'at' to 'date' so the x-axis will show 'date'
                             metrics_over_time.rename(columns={'at': 'date'}, inplace=True)
-
-                            # Convert data to long format for easy plotting of multiple metrics
                             melted = metrics_over_time.melt(id_vars='date', value_vars=selected_metrics, var_name='metric', value_name='value')
 
                             # Compute a 7-day moving average trend for each metric
                             melted['trend'] = melted.groupby('metric')['value'].transform(lambda x: x.rolling(7, min_periods=1).mean())
-
-                            # Create a line chart for the original metric values
                             fig_line = px.line(melted, x='date', y='value', color='metric', title='Average Sentiment Metrics Over Time')
 
                             # Add the trend line as a dashed line for each metric
@@ -544,7 +530,6 @@ def app_analysis_page():
                 st.write("No data available. Please select an application and download reviews.")
                 st.session_state['app_data'] = None
 
-        # Proceed if data is available
         if 'app_data' in st.session_state and st.session_state['app_data'] is not None:
             app_data = st.session_state['app_data']
 
@@ -560,8 +545,6 @@ def app_analysis_page():
                 st.write("### Score Distribution")
                 score_fig = plot_score_distribution(displayed_data)
                 st.plotly_chart(score_fig)
-
-                # Daily Average Rating Over Time
                 st.write("### Daily Average Rating Over Time")
 
                 # Group by date and compute the mean score
@@ -571,13 +554,11 @@ def app_analysis_page():
                     .mean(numeric_only=True)
                 )
 
-                # Convert data to long format for easier plotting
                 melted = metrics_over_time.melt(id_vars='at', value_vars=['score'], var_name='metric', value_name='value')
 
                 # Compute a 7-day moving average trend for the score
                 melted['trend'] = melted.groupby('metric')['value'].transform(lambda x: x.rolling(7, min_periods=1).mean())
 
-                # Create a line chart for the original score values
                 fig_line = px.line(
                     melted,
                     x='at',
@@ -602,7 +583,6 @@ def app_analysis_page():
 
                 st.plotly_chart(fig_line)
 
-                # Add description below the plot
                 st.write("""
                 **Description**:  
                 This plot shows the daily average rating of the app over time. Each point represents the average score on a given day, aggregated from user reviews.  
@@ -671,7 +651,6 @@ def app_analysis_page():
                 st.write("No data available. Please select an application and download reviews.")
                 st.session_state['app_data'] = None
 
-        # Proceed if data is available
         if 'app_data' in st.session_state and st.session_state['app_data'] is not None:
             app_data = st.session_state['app_data']
 
@@ -684,7 +663,6 @@ def app_analysis_page():
 
             if not final_filtered_data.empty:
                 final_filtered_data = final_filtered_data.drop_duplicates(subset=['content'])
-                # Preprocess text data for each row and store it in a new column
                 final_filtered_data['cleaned_content'] = final_filtered_data['content'].apply(preprocess_text_simple)
 
                 # User input for problem identification
@@ -715,7 +693,7 @@ def app_analysis_page():
                 ngram_length = st.selectbox("Select phrase length:", [1, 2, 3, 4], index=0)
 
                 all_ngrams = []
-                ngram_to_row_mapping = []  # To keep track of which row index generated the n-grams
+                ngram_to_row_mapping = [] 
 
                 for index, text in final_filtered_data['cleaned_content'].dropna().items():
                     ngrams = generate_ngrams(text, ngram_length)
@@ -762,7 +740,6 @@ def app_analysis_page():
                             st.write(f"No comments contain the phrase: **{selected_phrase}**")
 
                 # Word Cloud
-                # Define a custom colormap with vibrant colors
                 colors = ["#FF66C4", "#FF66C4", "#cbd5e8", "#2196F3", "#2E2E2E"]
                 custom_cmap = LinearSegmentedColormap.from_list("custom_palette", colors)
 

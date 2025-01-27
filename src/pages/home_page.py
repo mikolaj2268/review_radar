@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
   ReviewRadar Application
   Created by Mikołaj Mroz and Michał Binda
@@ -30,13 +29,12 @@ def home_page():
         st.markdown("## Useful Links")
         database_link_dict = {
             "GitHub Repository": "https://github.com/mikolaj2268/review_radar",
-            # "Google Play API": "https://developers.google.com/android-publisher",
         }
         for link_text, link_url in database_link_dict.items():
             create_st_button_with_color(link_text, link_url, st_col=st.sidebar)
 
         st.markdown("## Models used to analyze sentiment")
-        # Removed Pandas and NumPy, added model links
+        # model links
         software_link_dict = {
             "TextBlob": "https://textblob.readthedocs.io/en/dev/",
             "VADER Sentiment": "https://github.com/cjhutto/vaderSentiment",
@@ -47,10 +45,10 @@ def home_page():
             create_st_button_with_color(link_text, link_url, st_col=st.sidebar)
 
     # Main content
-    left_col, right_col = st.columns(2)  # 30% for image, 70% for text
+    left_col, right_col = st.columns(2)
 
     with right_col:
-        # Add logo or main image
+        # Add logo on the right side
         img = Image.open("assets/images/WordCloud2.png") 
         st.image(img, width=650)
 
@@ -85,10 +83,8 @@ def home_page():
 
     st.markdown("---")
 
-    # Section: Usage
     st.markdown("## Usage: 4 Easy Steps to Improve Your App")
 
-    # Create two columns for usage section
     left_col, right_col = st.columns([3, 1])
 
     with left_col:
@@ -117,21 +113,16 @@ def home_page():
 
     st.markdown("---")
 
-    # Sekcja autorów
     st.markdown("## Authors")
 
-    # Mikołaj Mróz
     st.markdown("**Mikołaj Mróz**")
     create_st_button_with_color("GitHub: mikolaj2268", "https://github.com/mikolaj2268")
     create_st_button_with_color("Email: mikolaj2268@gmail.com", "mailto:mikolaj2268@gmail.com")
     st.write("")  # Dodanie przerwy
 
-    # Michał Binda
     st.markdown("**Michał Binda**")
     create_st_button_with_color("GitHub: michal1701", "https://github.com/michal1701")
     create_st_button_with_color("Email: mich.binda@gmail.com", "mailto:mich.binda@gmail.com")
-
-
 
 
 if __name__ == "__main__":

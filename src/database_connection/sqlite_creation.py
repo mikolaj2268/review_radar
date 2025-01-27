@@ -38,5 +38,4 @@ def create_empty_database(db_path, create_query):
 
     print(f"Empty database created at: {db_path}")
 
-# Run the function to create the empty database
 create_empty_database(new_db_path, create_table_query)
