@@ -5,7 +5,6 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from the .env file
 load_dotenv()
 
 def get_db_connection():
@@ -45,7 +44,7 @@ def get_reviews_date_ranges(conn, app_name):
     ''', (app_name,))
     dates = cursor.fetchall()
     cursor.close()
-    # Convert list of tuples to a set of dates
+    
     existing_dates = set(date[0] for date in dates if date[0])
     return existing_dates
 
