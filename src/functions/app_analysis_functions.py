@@ -92,12 +92,11 @@ def plot_score_distribution(df):
     Parameters:
     df (pd.DataFrame): The input DataFrame containing the reviews and a 'score' column.
     """
-    # Calculate the percentage distribution
+
     score_counts = df['score'].value_counts(normalize=True).sort_index()
     score_distribution_df = score_counts.reset_index()
     score_distribution_df.columns = ['Score', 'Percentage']
     
-    # Create a histogram with percentages
     fig = px.bar(
         score_distribution_df,
         x='Score',
@@ -108,14 +107,12 @@ def plot_score_distribution(df):
         color_discrete_sequence=['#2196F3']
     )
     
-    # Update layout and formatting
     fig.update_layout(
         xaxis_title='Score',
         yaxis_title='Percentage',
         yaxis=dict(tickformat=".0%")
     )
     
-    # Ensure text appears outside the bars
     fig.update_traces(texttemplate='%{text:.2%}', textposition='outside')
     
     return fig
@@ -140,26 +137,21 @@ def preprocess_data(df, model=None, min_records=100, apply_lemmatization=True):
     if df.empty:
         raise ValueError("The input DataFrame is empty. Please provide a valid DataFrame.")
 
-    # Dropping unnecessary columns 
     columns_to_drop = ['c_name', 'user_image', 'reply_content', 'replied_at', 'review_created_version', 'review_id']
     df = df.drop(columns=[col for col in columns_to_drop if col in df.columns], errors='ignore')
 
-    # Basic Cleanup and Null Handling
     df = df.drop_duplicates()
     df = df[(df['score'] >= 1) & (df['score'] <= 5)]
     df = df[df['content'].str.len() <= 500]
     for col in ['content', 'app_version']:
         df[col] = df[col].fillna('')
-    
-    # Date Parsing
+
     df['at'] = pd.to_datetime(df['at'], errors='coerce')
-    df = df.dropna(subset=['at'])  # Remove rows with invalid dates
+    df = df.dropna(subset=['at']) 
     df['date'] = df['at'].dt.date
 
-    # Normalize Text
     df['content'] = df['content'].str.lower()
 
-    # Optional Cleaning and Tokenization based on Model
     if model == 'VADER':
         df['clean_content'] = df['content'].str.replace(r'[^\w\s]', '', regex=True)
         
@@ -168,11 +160,9 @@ def preprocess_data(df, model=None, min_records=100, apply_lemmatization=True):
         df['tokens'] = df['content'].apply(lambda x: tokenizer.tokenize(x))
 
 
-    # Handle Small Datasets
     if len(df) < min_records:
         print(f"Warning: The dataset contains only {len(df)} records. Consider collecting more data.")
     
-    # Step 7: Add Features
     df['content_length'] = df['content'].str.len()
     if 'thumbs_up_count' in df.columns:
         df['thumbs_up_count'] = df['thumbs_up_count'].clip(lower=0)
@@ -342,7 +332,7 @@ def display_reviews(conn, selected_app, start_date, end_date):
     Returns:
     pd.DataFrame: DataFrame containing the fetched reviews.
     """
-    # Fetch reviews from the database
+
     reviews_df = get_reviews_for_app(conn, selected_app, start_date, end_date)
     return reviews_df
 
