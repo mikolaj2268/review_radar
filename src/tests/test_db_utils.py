@@ -3,7 +3,6 @@ import sqlite3
 import pandas as pd
 import datetime
 
-# Import your db_utils functions
 from src.database_connection.db_utils import (
     create_reviews_table,
     get_app_data,
