@@ -13,11 +13,10 @@ from src.database_connection.db_utils import (
 
 class TestDBUtils(unittest.TestCase):
     def setUp(self):
-        # Initialize an in-memory SQLite database for testing
+        # Initialize SQLite database
         self.conn = sqlite3.connect(':memory:')
         create_reviews_table(self.conn)
 
-        # Sample data to use in tests
         self.sample_reviews = pd.DataFrame({
             'review_id': ['1', '2', '3'],
             'user_name': ['User1', 'User2', 'User3'],
@@ -39,11 +38,9 @@ class TestDBUtils(unittest.TestCase):
             'language': ['en', 'en', 'en']
         })
 
-        # Insert sample data into the database
         insert_reviews(self.conn, self.sample_reviews)
 
     def tearDown(self):
-        # Close the database connection after each test
         self.conn.close()
 
     def test_create_reviews_table_exists(self):
@@ -59,7 +56,7 @@ class TestDBUtils(unittest.TestCase):
         """Test fetching all data for a specific app."""
         retrieved_data = get_app_data(self.conn, 'TestApp')
         self.assertEqual(len(retrieved_data), 3)
-        # Ensure the data is ordered by 'at' DESC
+        
         expected_contents = [
             'Needs improvement',
             'Not bad',
@@ -101,9 +98,7 @@ class TestDBUtils(unittest.TestCase):
 
     def test_insert_reviews_duplicate(self):
         """Test that inserting duplicate reviews does not cause errors and duplicates are not added."""
-        # Insert the same reviews again
         insert_reviews(self.conn, self.sample_reviews)
-        # Should ignore duplicates due to 'INSERT OR IGNORE'
         retrieved_data = get_app_data(self.conn, 'TestApp')
         self.assertEqual(len(retrieved_data), 3, "Should still have 3 reviews, no duplicates added.")
 
