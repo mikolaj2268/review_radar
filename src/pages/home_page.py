@@ -8,12 +8,12 @@ from src.functions.gui import create_st_button, create_st_button_with_color
 def home_page():
     with st.sidebar:
 
-        st.markdown("## Useful Links")
-        database_link_dict = {
-            "GitHub Repository": "https://github.com/mikolaj2268/review_radar",
-        }
-        for link_text, link_url in database_link_dict.items():
-            create_st_button_with_color(link_text, link_url, st_col=st.sidebar)
+        # st.markdown("## Useful Links")
+        # database_link_dict = {
+        #     "GitHub Repository": "https://github.com/mikolaj2268/review_radar",
+        # }
+        # for link_text, link_url in database_link_dict.items():
+        #     create_st_button_with_color(link_text, link_url, st_col=st.sidebar)
 
         st.markdown("## Models used to analyze sentiment")
         # model links
